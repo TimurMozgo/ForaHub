@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../../chatgpt-auth";
-import { validateState } from "../../../../public/games/dead-route/save-model.mjs";
+import { validateState, migrateState } from "../../../../public/games/dead-route/save-model.mjs";
 
 export const dynamic = "force-dynamic";
 type Row = {snapshot_json:string; previous_json:string|null; revision:number; mutation_id:string; updated_at:string};
@@ -12,13 +12,13 @@ async function identity() {
 }
 function record(row:Row|null) {
   if(!row)return null;
-  const state=validateState(JSON.parse(row.snapshot_json)); if(!state)throw new Error("invalid stored checkpoint");
+  const state=migrateState(JSON.parse(row.snapshot_json)); if(!state)throw new Error("invalid stored checkpoint");
   return {state,revision:row.revision,mutationId:row.mutation_id,updatedAt:row.updated_at};
 }
 async function read(id:string) { return env.DB!.prepare("SELECT snapshot_json,previous_json,revision,mutation_id,updated_at FROM turret_saves WHERE player_id=?").bind(id).first<Row>(); }
 export async function GET() {
   const user=await identity(); if(!user)return reply({error:"sign_in_required"},401);
-  try {if(!env.DB)throw new Error("no DB");return reply({scope:user.scope,record:record(await read(user.id)),formatVersion:2,identity:"sites"});}
+  try {if(!env.DB)throw new Error("no DB");return reply({scope:user.scope,record:record(await read(user.id)),formatVersion:3,identity:"sites"});}
   catch {return reply({scope:user.scope,error:"cloud_unavailable",identity:"sites"},503);}
 }
 export async function PUT(request:Request) {
@@ -28,7 +28,7 @@ export async function PUT(request:Request) {
   const user=await identity(); if(!user)return reply({error:"sign_in_required"},401);
   if(Number(request.headers.get("content-length"))>8192)return reply({error:"too_large"},413);
   let input; try {const text=await request.text();if(text.length>8192)return reply({error:"too_large"},413);input=JSON.parse(text);}catch{return reply({error:"invalid_json"},400);}
-  if(input.formatVersion!==2)return reply({error:"save_format_mismatch"},426);
+  if(input.formatVersion!==3)return reply({error:"save_format_mismatch"},426);
   const state=validateState(input.state),revision=input.baseRevision,mutationId=input.mutationId;
   if(!state||!Number.isInteger(revision)||revision<0||revision>2147483646||typeof mutationId!=="string"||!/^[a-zA-Z0-9-]{16,80}$/.test(mutationId))return reply({error:"invalid_save"},400);
   try {

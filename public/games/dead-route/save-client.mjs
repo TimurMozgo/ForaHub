@@ -1,4 +1,4 @@
-import {validateState,validateLocal,reconcile} from './save-model.mjs?v=2026.11.09.1';
+import {validateState,validateLocal,reconcile} from './save-model.mjs?v=2026.11.09.2';
 const endpoint='/api/dead-route/save';
 const uid=()=>crypto.randomUUID();
 const clone=s=>JSON.parse(JSON.stringify(s));
@@ -31,7 +31,7 @@ export async function createDeadSave(game) {
     if(!r)return null;
     if(!validateState(r.state)||!Number.isInteger(r.revision)||r.revision<1||typeof r.mutationId!=='string')throw new Error('bad_save');return r;
   }
-  function fromRemote(r) {return {version:2,state:r?.state||game.fresh(),baseRevision:r?.revision||0,dirty:false,mutationId:r?.mutationId||uid(),savedAt:r?.updatedAt||new Date().toISOString()};}
+  function fromRemote(r) {return {version:3,state:r?.state||game.fresh(),baseRevision:r?.revision||0,dirty:false,mutationId:r?.mutationId||uid(),savedAt:r?.updatedAt||new Date().toISOString()};}
   function showConflict(remote) {
     local.state=validateState(game.capture())||local.state;blocked=true;game.pause();stash();send('Выбери сохранение','conflict');
     const summary=s=>`участок ${s.zone}, отряд ${s.crew.length} чел.`;
@@ -61,7 +61,7 @@ export async function createDeadSave(game) {
       if(!local.dirty)return;
       const sent=clone(local);local.lastAttemptId=sent.mutationId;persist();
       send('Синхронизация…','syncing');
-      const {status,data}=await request('PUT',{formatVersion:2,state:sent.state,baseRevision:sent.baseRevision,mutationId:sent.mutationId});
+      const {status,data}=await request('PUT',{formatVersion:3,state:sent.state,baseRevision:sent.baseRevision,mutationId:sent.mutationId});
       if(status===401){cloudKnown=false;throw new Error('auth');}
       if(!accountCheck(data))return;
       if(status===426){blocked=true;game.pause();panel('Доступно обновление','Вернись в хаб и открой игру снова. Текущий прогресс сохранён локально.',[]);send('Нужно обновить игру','error');return;}
@@ -74,10 +74,10 @@ export async function createDeadSave(game) {
     finally{busy=false;if(local?.dirty&&!blocked)schedule(6000);}
   }
   function write(state) {
-    if(!local||blocked||closed)return;
+    if(!local||blocked||closed)return false;
     const valid=validateState(state);if(!valid){send('Ошибка формата сохранения','error');return;}
-    if(JSON.stringify(valid)===JSON.stringify(local.state)){if(local.dirty)schedule();return;}
-    local={...local,state:valid,dirty:true,mutationId:uid(),savedAt:new Date().toISOString()};persist();send(localOK?'Сохранено на устройстве':'Локальная память недоступна',localOK?'local':'error');schedule();
+    if(JSON.stringify(valid)===JSON.stringify(local.state)){if(local.dirty)schedule();return true;}
+    local={...local,state:valid,dirty:true,mutationId:uid(),savedAt:new Date().toISOString()};persist();send(localOK?'Сохранено на устройстве':'Локальная память недоступна',localOK?'local':'error');schedule();return true;
   }
   async function init() {
     try {
@@ -86,8 +86,8 @@ export async function createDeadSave(game) {
       scope=data.scope;key=`gamehub:dead-route:v2:${scope}`;
       if(navigator.locks){const acquired=await new Promise(resolve=>{navigator.locks.request(key,{ifAvailable:true},lock=>{if(!lock){resolve(false);return;}resolve(true);return new Promise(r=>{releaseLock=r;});}).catch(()=>resolve(false));});
         if(!acquired){panel('Игра уже открыта','Закрой Dead Route в другой вкладке, затем попробуй снова.',[['Проверить снова',()=>location.reload()]]);send('Открыто в другой вкладке','error');return;}}
-      let raw;try{raw=localStorage.getItem(key);local=validateLocal(JSON.parse(raw||'null'));if(raw&&!local)localStorage.setItem(key+':damaged',raw);}catch{localOK=false;}
-      if(status===200&&data.formatVersion!==2)throw new Error('format');
+      let raw;try{raw=localStorage.getItem(key);local=validateLocal(JSON.parse(raw||'null'));if(raw&&!local)localStorage.setItem(key+':damaged',raw);if(raw&&JSON.parse(raw)?.version===2&&!localStorage.getItem(key+':pre-campaign'))localStorage.setItem(key+':pre-campaign',raw);}catch{localOK=false;}
+      if(status===200&&data.formatVersion!==3)throw new Error('format');
       if(status===200){cloudKnown=true;const remote=cloudRecord(data),decision=reconcile(local,remote);
         if(decision==='conflict'){game.apply(clone(local.state));game.ready();showConflict(remote);return;}
         if(decision==='remote')local=fromRemote(remote);
@@ -107,7 +107,11 @@ export async function createDeadSave(game) {
     if(e.data?.type==='dead:exit'){game.pause();write(game.capture());await Promise.race([flush(),new Promise(r=>setTimeout(r,1400))]);closed=true;if(timer)clearTimeout(timer);releaseLock?.();parent.postMessage({type:'dead:exit-ready'},location.origin);}
   });
   await init();
-  return {write,flush};
+  return {write,flush,
+    backup(){try{return validateLocal(JSON.parse(localStorage.getItem(key+':previous-campaign')||'null'))?.state||null;}catch{return null;}},
+    archive(){if(!local||blocked)return false;try{localStorage.setItem(key+':previous-campaign',JSON.stringify(local));return true;}catch{send('Не удалось создать резервную копию','error');return false;}},
+    async handoff(state){if(!write(state))return false;await flush();if(blocked||(!localOK&&local?.dirty))return false;closed=true;if(timer)clearTimeout(timer);releaseLock?.();return true;}
+  };
 }
 
 

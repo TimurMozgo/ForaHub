@@ -27,3 +27,5 @@
 .dead-release-note{display:grid;gap:9px;background:#a7b27b0b;border:1px solid #a7b27b26;border-radius:12px;padding:16px;margin:18px 0;color:#c0c5ae;font-size:12px;line-height:1.7}.dead-release-note strong{color:#e8dfbf}
 @media(max-width:600px){.dead-hero{min-height:360px;background-size:auto 160%;background-position:68% 10%}.dead-hero .hero-shade{background:linear-gradient(90deg,#0b1511eb,#0b15119c 55%,#0b151122),linear-gradient(0deg,#0b1511cf,transparent 70%)}.dead-hero .hero-title{font-size:39px;margin-top:41px}.dead-hero .hero-number{font-size:7px;right:15px}}
 
+
+.sushi,.detail-art.sushi{background:#0ba5bc url('/sushi-tower-cover.png') center/contain no-repeat}.detail-art.sushi{height:260px}@media(max-width:600px){.detail-art.sushi{height:235px}}

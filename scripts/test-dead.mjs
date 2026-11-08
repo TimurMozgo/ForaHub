@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import ts from 'typescript';
-import {validateState,validateLocal,reconcile} from '../public/games/dead-route/save-model.mjs';
-const fresh={zone:'post',started:false,completed:false,crew:[{name:'ВАНЯ',type:1,hp:100}],kit:{weapon:'pistol',hasShotgun:false,money:0,damage:18,ammo:12,reserve:96,grenades:3,bank:{pistol:{ammo:12,reserve:72},shotgun:{ammo:6,reserve:18}}}};
+import {validateState,validateLocal,reconcile,migrateState,freshCampaign} from '../public/games/dead-route/save-model.mjs';
+const fresh=freshCampaign();
 assert.deepEqual(validateState({...fresh,playerId:'other',stars:999}),fresh);
 for(const bad of [{zone:'unknown'},{crew:[]},{crew:[{name:'A',type:8,hp:100}]},{kit:{...fresh.kit,money:-1}},{kit:{...fresh.kit,bank:null}}])assert.equal(validateState({...fresh,...bad}),null);
 assert.equal(validateLocal({version:3,state:fresh}),null);
@@ -19,18 +19,18 @@ const DB={prepare(sql){return {bind(...params){return {async first(){return sqli
 let player='alice';
 const source=readFileSync(new URL('../app/api/dead-route/save/route.ts',import.meta.url),'utf8');
 const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-const api={};new Function('require','exports',code)(name=>{if(name==='cloudflare:workers')return {env:{DB}};if(name.includes('chatgpt-auth'))return {getChatGPTUser:async()=>player?{userId:player}:null};if(name.includes('save-model'))return {validateState};throw new Error(name);},api);
+const api={};new Function('require','exports',code)(name=>{if(name==='cloudflare:workers')return {env:{DB}};if(name.includes('chatgpt-auth'))return {getChatGPTUser:async()=>player?{userId:player}:null};if(name.includes('save-model'))return {validateState,migrateState};throw new Error(name);},api);
 const request=(body,origin='https://hub.test')=>new Request('https://hub.test/api/dead-route/save',{method:'PUT',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});
 let response=await api.GET();assert.equal(response.status,200);const first=await response.json();assert.equal(first.record,null);
-let body={formatVersion:2,state:fresh,baseRevision:0,mutationId:'initial-operation-alice'};
+let body={formatVersion:3,state:fresh,baseRevision:0,mutationId:'initial-operation-alice'};
 response=await api.PUT(request(body));assert.equal(response.status,200);assert.equal((await response.json()).record.revision,1);
 response=await api.PUT(request(body));assert.equal((await response.json()).record.revision,1,'Retry must be idempotent');
-body={formatVersion:2,state:{...fresh,started:true,zone:'service'},baseRevision:1,mutationId:'second-operation-alice'};
+body={formatVersion:3,state:{...fresh,started:true,zone:'service'},baseRevision:1,mutationId:'second-operation-alice'};
 response=await api.PUT(request(body));assert.equal(response.status,200);assert.equal((await response.json()).record.revision,2);
 response=await api.PUT(request({...body,baseRevision:1,mutationId:'stale-operation-alice'}));assert.equal(response.status,409);
 response=await api.PUT(request({...body,state:{...fresh,zone:'invalid'}}));assert.equal(response.status,400);
 response=await api.PUT(request(body,'https://evil.test'));assert.equal(response.status,403);
-const row=sqlite.prepare('SELECT * FROM turret_saves WHERE player_id=?').get('dead-route:sites:alice');assert.equal(JSON.parse(row.previous_json).zone,'post');assert.equal(JSON.parse(row.snapshot_json).zone,'service');
+const row=sqlite.prepare('SELECT * FROM turret_saves WHERE player_id=?').get('dead-route:sites:alice');assert.equal(JSON.parse(row.previous_json).zone,'c1-1');assert.equal(JSON.parse(row.snapshot_json).zone,'service');
 player='bob';response=await api.GET();const bob=await response.json();assert.notEqual(bob.scope,first.scope);assert.equal(bob.record,null,'Other accounts cannot see Alice save');
 response=await api.PUT(request({...body,playerId:'alice',baseRevision:0,mutationId:'initial-operation-bob'}));assert.equal(response.status,200);
 assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM turret_saves').get().n,2);
@@ -38,3 +38,12 @@ player='alice';response=await api.GET();assert.equal((await response.json()).rec
 player=null;assert.equal((await api.GET()).status,401);assert.equal((await api.PUT(request(body))).status,401);
 const other=sqlite.prepare('SELECT * FROM turret_saves WHERE player_id=?').get('sites:alice');assert.equal(other,undefined,'Dead Route must not write into Turret Forge saves');sqlite.close();console.log('PASS: validation, local reconciliation, lost acknowledgements, account isolation, origin/auth checks, idempotency, stale-write rejection, previous checkpoint retention.');
 
+
+const old={zone:'post',started:true,completed:false,crew:fresh.crew,kit:fresh.kit};
+assert.equal(migrateState({...old,started:false}).zone,'c1-1');
+assert.equal(migrateState(old).zone,'post');assert.equal(migrateState(old).legacy,true);
+assert.equal(migrateState({...old,zone:'ending',completed:true}).zone,'breakdown');
+assert.equal(migrateState({...old,zone:'breakdown',completed:true}).zone,'station');
+assert.deepEqual(migrateState({...old,zone:'station',completed:true}).completedChapters,[1,2,3]);
+assert.equal(validateLocal({...local,version:2,state:old}).version,3);
+console.log('PASS: legacy campaign migration preserves played chapters; untouched saves begin chapter I.');
