@@ -1,0 +1,7 @@
+Truck start recording: Truck-Diesel 10dodge start
+Creator: canucklovingbrit (Freesound), distributed by freesound_community on Pixabay
+Source: https://pixabay.com/sound-effects/city-truck-diesel-10dodge-start-43785/
+License: Pixabay Content License, https://pixabay.com/service/license-summary/
+Downloaded: 2026-11-06
+truck-start.wav: full recording, decoded from original MP3.
+truck-starter.wav: opening 0.15–0.80 seconds, faded at boundaries.
