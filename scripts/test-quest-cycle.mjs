@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const source=readFileSync(new URL('../app/api/quests/route.ts',import.meta.url),'utf8');
+const section=source.slice(source.indexOf('function parts('),source.indexOf('function fresh('));
+const calendar=new Function(`${ts.transpileModule(section,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText};return calendar;`)();
+assert.deepEqual(calendar(new Date('2026-11-08T21:59:59Z')).week,'2026-11-02');
+assert.deepEqual(calendar(new Date('2026-11-08T22:00:00Z')).week,'2026-11-09');
+assert.equal(calendar(new Date('2026-11-08T21:59:59Z')).resetAt,'2026-11-08T22:00:00.000Z');
+assert.equal(calendar(new Date('2026-03-29T20:59:59Z')).resetAt,'2026-03-29T21:00:00.000Z');
+assert.equal(calendar(new Date('2026-03-29T21:00:00Z')).week,'2026-03-30');
+console.log('PASS Kyiv weekly reset at Monday midnight, including DST');
