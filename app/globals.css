@@ -30,4 +30,4 @@
 
 .sushi,.detail-art.sushi{background:#0ba5bc url('/sushi-tower-cover.png') center/contain no-repeat}.detail-art.sushi{height:260px}@media(max-width:600px){.detail-art.sushi{height:235px}}
 
-.cats,.detail-art.cats{background:#ffab0c url('/cats-defender-cover.png') center/contain no-repeat}.detail-art.cats{height:260px}@media(max-width:600px){.detail-art.cats{height:235px}}
+.cats,.detail-art.cats{background:#06102b url('/cats-defender-cover.png') center/cover no-repeat}.detail-art.cats{height:260px}@media(max-width:600px){.detail-art.cats{height:235px}}
