@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CaseEnergy } from "./case-energy";
 import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "lucide-react";
 
 type CaseId = "free" | "spark" | "pulse" | "legend";
@@ -55,6 +56,7 @@ export function CaseShowcase() {
   const [prize, setPrize] = useState<Prize>(SAMPLE_PRIZES[0]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [closing, setClosing] = useState(false);
+  const [settled, setSettled] = useState(false);
 
   useEffect(() => () => {
     sequence.current++;
@@ -75,10 +77,10 @@ export function CaseShowcase() {
   }, [selected]);
 
   function audio() {
-    if (!audioOn.current || typeof window === "undefined") return null;
+    if (typeof window === "undefined") return null;
     try {
       context.current ??= new AudioContext();
-      if (!master.current) { master.current=context.current.createGain(); master.current.connect(context.current.destination); }
+      if (!master.current) { master.current=context.current.createGain(); master.current.gain.value=audioOn.current?1:0; master.current.connect(context.current.destination); }
       if (context.current.state === "suspended") void context.current.resume();
       return context.current;
     } catch { return null; }
@@ -127,7 +129,7 @@ export function CaseShowcase() {
     const token = sequence.current;
     const result = samplePrize(c.id);
     tapsRef.current=0; setTaps(0);
-    setFrame(0); setReady(false); setLoadError(false);
+    setFrame(0); setReady(false); setLoadError(false); setSettled(false);
     setSelected(c);
     setPrize(result);
 
@@ -138,7 +140,8 @@ export function CaseShowcase() {
     const soundsReady=loadSounds();
     const sheet = new Image();
     sheet.src = "/cases/" + c.id + "-frames.png";
-    try { await sheet.decode(); } catch {
+    const backdrop = new Image(); backdrop.src = "/cases/energy-chamber.png";
+    try { await Promise.all([sheet.decode(),backdrop.decode()]); } catch {
       if (token === sequence.current) setLoadError(true);
       return;
     }
@@ -154,18 +157,20 @@ export function CaseShowcase() {
     const count=++tapsRef.current;
     setTaps(count); playOpen();
     if(count!==3) return;
-    setPhase("charging"); setFrame(1); playCharge();
-    // Each arrival coincides with the end of its visible flight.
-    [0,1,2,3,4,5,6,7].forEach(i => {
-      timers.current.push(setTimeout(() => playSound("flight-v2",.18,.45),i*210));
-      timers.current.push(setTimeout(() => playSound("tap-v2",.13,.12),900+i*210));
+    setPhase("charging"); setFrame(0); playCharge();
+    // Six seconds of gathering energy; two opening; two for the prize entrance.
+    Array.from({length:12},(_,i)=>i).forEach(i => {
+      timers.current.push(setTimeout(() => playSound("flight-v2",.09+i*.008,.55),i*460));
     });
-    timers.current.push(setTimeout(() => setPhase("holding"),2700));
+    timers.current.push(setTimeout(playCharge,2400));
+    timers.current.push(setTimeout(playCharge,4600));
+    timers.current.push(setTimeout(() => setPhase("holding"),5000));
     timers.current.push(setTimeout(() => {
-      setPhase("burst"); setFrame(2); playSound("flight-v2",.4,.6);
-    },3100));
-    [3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),3100+(index-2)*280)));
-    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},4700));
+      setPhase("burst"); setFrame(1); playSound("flight-v2",.4,.8);
+    },6000));
+    [2,3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),6000+(index-1)*400)));
+    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},8000));
+    timers.current.push(setTimeout(() => setSettled(true),10000));
   }
 
   function close() {
@@ -187,21 +192,21 @@ export function CaseShowcase() {
     </button>)}</div>
     <div className="case-preview-note"><Sparkles size={18} /><p><strong>Пока это просмотр анимации.</strong> Оплата, начисление звёзд и выдача подарков появятся после подключения бота и призового фонда.</p></div>
     <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <div className="case-theater-inner"><div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; if(master.current) master.current.gain.value = !soundEnabled ? 1 : 0; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
+      <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
+      {selected && <><div className="case-chamber-backdrop" aria-hidden="true"/><div className="case-chamber-mist" aria-hidden="true"/><div className="case-chamber-light" aria-hidden="true"/><CaseEnergy key={selected.id} phase={ready ? phase : "loading"} tone={selected.tone}/></>}
+      <div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; if(master.current) master.current.gain.value = !soundEnabled ? 1 : 0; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
       {selected && <><div className="case-theater-title"><span className="eyebrow">{selected.price === 0 ? "БЕСПЛАТНЫЙ КЕЙС" : `${selected.price} STARS`}</span><h2>{selected.title}</h2></div>
         {phase !== "revealed" && <div className={`case-opening-stage case-energy-scene sprite-scene ${ready ? phase : "loading"}`}>
           <div className="case-energy-halo" aria-hidden="true"/><div className="case-energy-ring" aria-hidden="true"/>
-          <div className="case-energy-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:`${12+(i*17)%76}%`,top:`${20+(i*23)%60}%`,animationDelay:`${i*.13}s`}}/>)}</div>
           <div className="case-sprite-stage">
-          {phase === "charging" && <div className="case-orbs" aria-hidden="true">{Array.from({length:8},(_,i)=><i key={i} style={{"--orb-x":`${[-150,120,-80,160,-120,65,-35,95][i]}px`,"--orb-delay":`${i*210}ms`} as CSSProperties}><b/></i>)}</div>}
           <button type="button" className={`case-sprite tap-${taps}`} disabled={phase !== "waiting" || !ready || closing} onClick={tapChest} aria-label={phase === "waiting" ? `Нажать на сундук: ${taps} из 3` : `Кейс ${selected.title}, кадр ${frame+1} из 6`}>
           <span key={taps} className="case-tap-ripple" aria-hidden="true" style={{display:taps ? undefined : "none"}}/>
             {Array.from({length:6},(_,i)=><div key={i} className={`case-sprite-frame ${ready && frame === i ? "visible" : ""}`} style={{backgroundImage:`url(/cases/${selected.id}-frames.png)`,backgroundPosition:`${(i%3)*50}% ${i<3?0:100}%`}}/>)}
           </button></div>
           {phase === "burst" && frame === 5 && <span className="case-emerging-prize">{iconFor(prize,76)}</span>}
-          <span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия нарастает…" : phase === "holding" ? "Тот самый момент…" : "Открываем!"}</span>
+          <div className="case-charge-caption"><span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия пробуждается…" : phase === "holding" ? "Уже не удержать…" : "Открываем!"}</span><div className="case-tap-indicators" aria-hidden="true">{[1,2,3].map(i=><i key={i} className={taps>=i?"lit":""}/>)}</div></div>
         </div>}
-        {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
+        {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
       </>}
       </div>
     </dialog>
