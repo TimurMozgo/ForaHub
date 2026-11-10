@@ -1,0 +1,7 @@
+CC0 audio sources:
+- qubodup, "7 mechanical clicks and buzzes", https://opengameart.org/content/7-mechanical-clicks-and-buzzes
+  mechanical_button-01.flac -> unlock.flac; mechanical_clicks-03.flac -> open.flac
+- Oiboo, "open chest SFX", https://opengameart.org/content/open-chest-sfx
+  open chest_0.wav -> reward.wav (normalized, faded)
+  open chest_0.wav -> charge.wav (reversed, trimmed, filtered, normalized, faded)
+License: CC0 1.0, https://creativecommons.org/publicdomain/zero/1.0/

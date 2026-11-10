@@ -125,3 +125,13 @@
 @keyframes energy-burst{0%{opacity:.3;transform:scale(.7)}35%{opacity:.75}100%{opacity:0;transform:scale(2.5)}}
 @keyframes energy-prize{from{opacity:0;transform:translateY(50px) scale(.3)}to{opacity:1;transform:translateY(-20px) scale(1.3)}}
 @media(prefers-reduced-motion:reduce){.case-energy-sparks,.case-energy-ring{display:none}.case-energy-scene .case-chest{animation:none!important}.case-energy-scene .case-energy-halo{animation:none!important;opacity:.2}.case-energy-scene.burst .case-chest-lid{animation:energy-lid .75s ease-out both!important}.case-emerging-prize{animation:energy-prize .75s ease-out both!important}}
+/* Six complete rendered poses; no sliced or detached lid. */
+.case-sprite{position:relative;width:min(440px,90vw);aspect-ratio:1;z-index:2;isolation:isolate}
+.case-sprite-frame{position:absolute;inset:0;background-size:300% 200%;background-repeat:no-repeat;opacity:0;transition:opacity 85ms linear;mask-image:radial-gradient(ellipse 53% 55% at 50% 51%,#000 63%,transparent 98%)}
+.case-sprite-frame.visible{opacity:1}
+.sprite-scene.charging .case-sprite{animation:sprite-charge 2.2s linear both}
+.sprite-scene.burst .case-sprite{animation:none;transform:none}
+.sprite-scene .case-energy-halo{opacity:.14}
+.sprite-scene .case-emerging-prize{top:27%;animation:energy-prize .5s ease-out both}
+@keyframes sprite-charge{0%,20%{transform:translateX(0)}30%{transform:translateX(-1px)}40%{transform:translateX(1px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}70%{transform:translateX(-3px)}78%{transform:translateX(3px)}85%{transform:translateX(-3px)}91%{transform:translateX(2px)}96%{transform:translateX(-2px)}100%{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.sprite-scene.charging .case-sprite{animation:none}.case-sprite-frame{transition:opacity 85ms linear!important}}
