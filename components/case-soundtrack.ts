@@ -31,12 +31,12 @@ export function risingHum(ctx: AudioContext, output: AudioNode, track: Track) {
   const at=ctx.currentTime;
   [82.41,164.81,247.22].forEach((hz,i)=>{
     const source=ctx.createOscillator(),gain=ctx.createGain();source.type="sine";
-    source.frequency.setValueAtTime(hz,at);source.frequency.exponentialRampToValueAtTime(hz*1.5,at+5.15);
-    source.frequency.exponentialRampToValueAtTime(hz*.85,at+6.1);
+    source.frequency.setValueAtTime(hz,at);source.frequency.exponentialRampToValueAtTime(hz*1.5,at+14.15);
+    source.frequency.exponentialRampToValueAtTime(hz*.85,at+15.1);
     gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.009/(i+1),at+.45);
-    gain.gain.exponentialRampToValueAtTime(.075/(i+1),at+5.05);
-    gain.gain.linearRampToValueAtTime(.012/(i+1),at+5.65);gain.gain.linearRampToValueAtTime(0,at+6.9);
-    source.connect(gain).connect(output);track(source,[gain]);source.start(at);source.stop(at+6.92);
+    gain.gain.exponentialRampToValueAtTime(.12/(i+1),at+14.05);
+    gain.gain.linearRampToValueAtTime(.012/(i+1),at+14.65);gain.gain.linearRampToValueAtTime(0,at+15.9);
+    source.connect(gain).connect(output);track(source,[gain]);source.start(at);source.stop(at+15.92);
   });
 }
 
@@ -47,16 +47,27 @@ export function unsealSound(ctx: AudioContext, output: AudioNode, track: Track) 
   source.connect(gain).connect(output);track(source,[gain]);source.start(at);source.stop(at+.72);
 }
 
-export function prizeChime(ctx: AudioContext, output: AudioNode, track: Track) {
-  // A warm major/add9 chord with quieter overtones and a natural decaying tail.
+export function prizeChime(ctx: AudioContext, output: AudioNode, track: Track, kind: "star" | "gift" | "gem") {
+  // Distinct timbres, not simply increasing loudness. All tails fit the reveal.
   const at=ctx.currentTime;
-  [440,554.365,659.255,987.767].forEach((hz,i)=>{
-    [1,2.001].forEach((harmonic,j)=>{
+  const notes=kind==="star"?[880,1318.51]:kind==="gift"?[659.255,830.609,987.767,1318.51]:[220,440,554.365,659.255,880,1318.51];
+  const decay=kind==="star"?.42:kind==="gift"?.95:1.48;
+  const spacing=kind==="star"?.075:kind==="gift"?.085:.065;
+  notes.forEach((hz,i)=>{
+    (kind==="star"?[1]:[1,2.001]).forEach((harmonic,j)=>{
       const source=ctx.createOscillator(),gain=ctx.createGain(),pan=ctx.createStereoPanner();
-      const start=at+i*.065;source.type="sine";source.frequency.value=hz*harmonic;pan.pan.value=(i-1.5)*.18;
-      gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime((j?.012:.065)/(1+i*.15),start+.014);
-      gain.gain.exponentialRampToValueAtTime(.0001,start+1.65);gain.gain.linearRampToValueAtTime(0,start+1.8);
-      source.connect(gain).connect(pan).connect(output);track(source,[gain,pan]);source.start(start);source.stop(start+1.81);
+      const start=at+i*spacing;source.type="sine";source.frequency.value=hz*harmonic;
+      pan.pan.value=(i/(notes.length-1)-.5)*(kind==="gem"?1.2:.5);
+      gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime((j?.009:kind==="gem"?.045:.06)/(1+i*.12),start+.014);
+      gain.gain.exponentialRampToValueAtTime(.0001,start+decay);gain.gain.linearRampToValueAtTime(0,start+decay+.12);
+      source.connect(gain).connect(pan).connect(output);track(source,[gain,pan]);source.start(start);source.stop(start+decay+.13);
     });
   });
+  if(kind==="gem") {
+    const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+    source.buffer=noise(ctx);source.loop=true;filter.type="bandpass";filter.Q.value=.8;
+    filter.frequency.setValueAtTime(1800,at);filter.frequency.exponentialRampToValueAtTime(5200,at+.75);
+    gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.045,at+.35);gain.gain.linearRampToValueAtTime(0,at+1.6);
+    source.connect(filter).connect(gain).connect(output);track(source,[filter,gain]);source.start(at);source.stop(at+1.62);
+  }
 }

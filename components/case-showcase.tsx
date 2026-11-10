@@ -58,6 +58,7 @@ export function CaseShowcase() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [closing, setClosing] = useState(false);
   const [settled, setSettled] = useState(false);
+  const [energyStep, setEnergyStep] = useState(0);
 
   useEffect(() => {
     const background = new Image();
@@ -87,7 +88,12 @@ export function CaseShowcase() {
     if (typeof window === "undefined") return null;
     try {
       context.current ??= new AudioContext();
-      if (!master.current) { master.current=context.current.createGain(); master.current.gain.value=audioOn.current?1:0; master.current.connect(context.current.destination); }
+      if (!master.current) {
+        master.current=context.current.createGain(); master.current.gain.value=audioOn.current?1:0;
+        const limiter=context.current.createDynamicsCompressor();
+        limiter.threshold.value=-10;limiter.knee.value=8;limiter.ratio.value=8;limiter.attack.value=.003;limiter.release.value=.18;
+        master.current.connect(limiter).connect(context.current.destination);
+      }
       if (context.current.state === "suspended") void context.current.resume();
       return context.current;
     } catch { return null; }
@@ -129,7 +135,7 @@ export function CaseShowcase() {
     if(kind==="flight")sparkFlight(ctx,master.current,trackSound,index);
     else if(kind==="hum")risingHum(ctx,master.current,trackSound);
     else if(kind==="open")unsealSound(ctx,master.current,trackSound);
-    else prizeChime(ctx,master.current,trackSound);
+    else prizeChime(ctx,master.current,trackSound,prize.kind);
   }
 
   function clearSequence() {
@@ -145,7 +151,7 @@ export function CaseShowcase() {
     const token = sequence.current;
     const result = samplePrize(c.id);
     tapsRef.current=0; setTaps(0);
-    setFrame(0); setReady(false); setLoadError(false); setSettled(false);
+    setFrame(0); setReady(false); setLoadError(false); setSettled(false); setEnergyStep(0);
     setSelected(c);
     setPrize(result);
 
@@ -174,18 +180,19 @@ export function CaseShowcase() {
     setTaps(count); playOpen();
     if(count!==3) return;
     setPhase("charging"); setFrame(0);
-    // Six seconds of gathering energy; two opening; two for the prize entrance.
-    Array.from({length:13},(_,i)=>i).forEach(i => {
+    // Three five-second energy milestones, then opening and the prize entrance.
+    [1,2,3].forEach(step=>timers.current.push(setTimeout(()=>setEnergyStep(step),step*5000)));
+    Array.from({length:37},(_,i)=>i).forEach(i => {
       timers.current.push(setTimeout(() => soundtrack("flight",i),i*390));
     });
     timers.current.push(setTimeout(() => soundtrack("hum"),850));
-    timers.current.push(setTimeout(() => setPhase("holding"),5000));
+    timers.current.push(setTimeout(() => setPhase("holding"),14000));
     timers.current.push(setTimeout(() => {
       setPhase("burst"); setFrame(1); soundtrack("open");
-    },6000));
-    [2,3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),6000+(index-1)*400)));
-    timers.current.push(setTimeout(() => {setPhase("revealed");soundtrack("prize");},8000));
-    timers.current.push(setTimeout(() => setSettled(true),10000));
+    },15000));
+    [2,3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),15000+(index-1)*400)));
+    timers.current.push(setTimeout(() => {setPhase("revealed");soundtrack("prize");},17000));
+    timers.current.push(setTimeout(() => setSettled(true),19000));
   }
 
   function close() {
@@ -218,7 +225,7 @@ export function CaseShowcase() {
           <span key={taps} className="case-tap-ripple" aria-hidden="true" style={{display:taps ? undefined : "none"}}/>
             {Array.from({length:6},(_,i)=><div key={i} className={`case-sprite-frame ${ready && frame === i ? "visible" : ""}`} style={{backgroundImage:`url(/cases/${selected.id}-frames.png)`,backgroundPosition:`${(i%3)*50}% ${i<3?0:100}%`}}/>)}
           </button></div>
-          <div className="case-charge-caption"><span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия пробуждается…" : phase === "holding" ? "Уже не удержать…" : "Открываем!"}</span><div className="case-tap-indicators" aria-hidden="true">{[1,2,3].map(i=><i key={i} className={taps>=i?"lit":""}/>)}</div></div>
+          <div className="case-charge-caption"><span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия пробуждается…" : phase === "holding" ? "Уже не удержать…" : "Открываем!"}</span><div className="case-tap-indicators" aria-label={`Энергия: ${energyStep} из 3`}>{[1,2,3].map(i=><i key={i} className={energyStep>=i?"lit":""}/>)}</div></div>
         </div>}
         {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
       </>}

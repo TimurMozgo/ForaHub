@@ -205,7 +205,7 @@
 .cinematic-chamber .case-sprite{filter:brightness(1.18) contrast(1.12)}
 .cinematic-chamber .sprite-scene.charging .case-sprite,.cinematic-chamber .sprite-scene.holding .case-sprite{filter:brightness(1.18) contrast(1.12)}
 .cinematic-chamber .case-sprite-frame{transition:opacity 220ms ease-in-out!important}
-.cinematic-chamber .sprite-scene.charging .case-energy-halo{animation:chest-charge-glow 5.1s .9s ease-in both!important}
+.cinematic-chamber .sprite-scene.charging .case-energy-halo{animation:chest-charge-glow 14.1s .9s ease-in both!important}
 .cinematic-chamber .sprite-scene.burst .case-sprite-stage.chest-departing{animation:chest-dismiss .4s ease-in both!important}
 @keyframes chamber-ready{from{opacity:0}to{opacity:1}}
 @keyframes chest-dismiss{from{opacity:1;transform:translateY(-5px) scale(1.015)}to{opacity:0;transform:translateY(20px) scale(.9)}}
