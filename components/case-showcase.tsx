@@ -228,7 +228,12 @@ export function CaseShowcase() {
           </button></div>
           <div className="case-charge-caption"><span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия пробуждается…" : phase === "holding" ? "Уже не удержать…" : "Открываем!"}</span><div className="case-tap-indicators" aria-label={`Энергия: ${energyStep} из 3`}>{[1,2,3].map(i=><i key={i} className={energyStep>=i?"lit":""}/>)}</div></div>
         </div>}
-        {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
+        {phase === "revealed" && <div className="case-reveal-stage" role="status">
+          <div className="case-reward-aura" aria-hidden="true"/>
+          <div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div>
+          <span className={`case-reward ${prize.kind}`}>{iconFor(prize, 146)}</span>
+          <div className="case-result-copy"><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>
+        </div>}
       </>}
       </div>
     </dialog>
