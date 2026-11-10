@@ -5,3 +5,11 @@ CC0 audio sources:
   open chest_0.wav -> reward.wav (normalized, faded)
   open chest_0.wav -> charge.wav (reversed, trimmed, filtered, normalized, faded)
 License: CC0 1.0, https://creativecommons.org/publicdomain/zero/1.0/
+v2 audio:
+artisticdude, Swishes Sound Pack (CC0):
+https://opengameart.org/content/swishes-sound-pack
+swish-1.wav -> flight-v2.wav; swish-9.wav -> land-v2.wav; swish-4.wav -> tap-v2.wav.
+JaggedStone, Magic Spell SFX (CC0):
+https://opengameart.org/content/magic-spell-sfx
+magical_1.ogg -> charge-v2.ogg; magical_2.ogg -> reveal-v2.ogg.
+Playback uses per-event gain, rate, low-pass filtering, fades, duration limits.

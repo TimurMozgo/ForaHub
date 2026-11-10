@@ -86,7 +86,7 @@ export function CaseShowcase() {
 
   async function loadSounds() {
     const ctx=audio(); if (!ctx) return;
-    await Promise.allSettled(["unlock.flac","charge.wav","open.flac","reward.wav"].map(async file => {
+    await Promise.allSettled(["tap-v2.wav","land-v2.wav","flight-v2.wav","charge-v2.ogg","reveal-v2.ogg"].map(async file => {
       const key=file.split(".")[0]; if (buffers.current[key]) return;
       const response=await fetch("/cases/audio/"+file);
       if (!response.ok) throw new Error("Audio unavailable");
@@ -98,18 +98,21 @@ export function CaseShowcase() {
     if(!ctx || !buffer || !master.current) return;
     const source=ctx.createBufferSource(),gain=ctx.createGain();
     source.buffer=buffer; gain.gain.value=volume;
-    source.connect(gain).connect(master.current);
+    source.playbackRate.value=key==="land-v2" ? .55 : key==="tap-v2" ? 1.15 : 1;
+    const filter=ctx.createBiquadFilter(); filter.type="lowpass";
+    filter.frequency.value=key==="land-v2" ? 300 : key==="tap-v2" ? 1500 : 7000;
+    source.connect(filter).connect(gain).connect(master.current);
     const length=Math.min(duration ?? buffer.duration,buffer.duration);
     gain.gain.setValueAtTime(volume,ctx.currentTime);
     gain.gain.setValueAtTime(volume,ctx.currentTime+Math.max(0,length-.08));
     gain.gain.linearRampToValueAtTime(0,ctx.currentTime+length);
     activeSounds.current.add(source);
-    source.onended=()=>{activeSounds.current.delete(source);source.disconnect();gain.disconnect();};
+    source.onended=()=>{activeSounds.current.delete(source);source.disconnect();filter.disconnect();gain.disconnect();};
     source.start(0,0,length);
   }
-  function playOpen(){playSound("unlock",.4,.6);}
-  function playCharge(){playSound("charge",.7);}
-  function playReveal(){playSound("reward",.65);}
+  function playOpen(){playSound("tap-v2",.35,.18);}
+  function playCharge(){playSound("charge-v2",.2,2.5);}
+  function playReveal(){playSound("reveal-v2",.32,1.1);}
 
   function clearSequence() {
     sequence.current++;
@@ -142,7 +145,7 @@ export function CaseShowcase() {
     await soundsReady;
     if (token !== sequence.current) return;
     setReady(true);
-    timers.current.push(setTimeout(() => { playSound("open",.45,.4); },600));
+    timers.current.push(setTimeout(() => { playSound("land-v2",.7,.4); },600));
     timers.current.push(setTimeout(() => setPhase("waiting"),900));
   }
 
@@ -154,12 +157,12 @@ export function CaseShowcase() {
     setPhase("charging"); setFrame(1); playCharge();
     // Each arrival coincides with the end of its visible flight.
     [0,1,2,3,4,5,6,7].forEach(i => {
-      timers.current.push(setTimeout(() => playSound("charge",.12,.24),i*210));
-      timers.current.push(setTimeout(() => playSound("unlock",.16,.12),900+i*210));
+      timers.current.push(setTimeout(() => playSound("flight-v2",.18,.45),i*210));
+      timers.current.push(setTimeout(() => playSound("tap-v2",.13,.12),900+i*210));
     });
     timers.current.push(setTimeout(() => setPhase("holding"),2700));
     timers.current.push(setTimeout(() => {
-      setPhase("burst"); setFrame(2); playSound("open",.35,.7);
+      setPhase("burst"); setFrame(2); playSound("flight-v2",.4,.6);
     },3100));
     [3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),3100+(index-2)*280)));
     timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},4700));
