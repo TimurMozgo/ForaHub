@@ -184,7 +184,7 @@
 .cinematic-chamber .sprite-scene.holding .case-energy-halo{opacity:.8;transform:scale(1.6)}
 .cinematic-chamber .sprite-scene.charging .case-sprite,.cinematic-chamber .sprite-scene.holding .case-sprite{animation:chamber-strain .14s linear infinite;filter:drop-shadow(0 0 calc(4px + var(--charge)*15px) color-mix(in srgb,var(--case-accent) 40%,transparent))}
 .cinematic-chamber .sprite-scene.burst .case-sprite-stage{animation:chamber-unseal 2s cubic-bezier(.2,.8,.3,1) both}
-.cinematic-chamber .sprite-scene.burst .case-sprite{animation:none;transform:none}
+.cinematic-chamber .sprite-scene.burst .case-sprite{animation:chamber-final-shake 1.6s linear both;transform:none}
 .case-charge-caption{position:absolute;bottom:5%;left:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:18px;z-index:6;text-align:center}
 .cinematic-chamber .case-charge-caption .case-opening-caption{position:static;color:#e0f3ef;font-size:13px;letter-spacing:.3px;text-shadow:0 2px 15px #001014}
 .case-tap-indicators{display:flex;gap:12px}
@@ -199,6 +199,7 @@
 @keyframes chamber-ring{from{opacity:.12;box-shadow:0 0 15px var(--case-accent)}to{opacity:.35;box-shadow:0 0 35px var(--case-accent)}}
 @keyframes chamber-strain{0%,100%{transform:translate(0,0) rotate(-.25deg)}25%{transform:translate(calc(var(--shake)*-1),-2px) rotate(-.6deg)}50%{transform:translate(var(--shake),1px) rotate(.6deg)}75%{transform:translate(calc(var(--shake)*-.5),-1px) rotate(.15deg)}}
 @keyframes chamber-unseal{0%{transform:scale(1)}45%{transform:translateY(-10px) scale(1.04)}100%{transform:translateY(-5px) scale(1.015)}}
+@keyframes chamber-final-shake{0%{transform:translate(-12px,-4px) rotate(-2deg)}5%{transform:translate(13px,3px) rotate(2.2deg)}10%{transform:translate(-13px,-5px) rotate(-2.4deg)}15%{transform:translate(14px,2px) rotate(2.5deg)}20%{transform:translate(-12px,-4px) rotate(-2.2deg)}25%{transform:translate(12px,3px) rotate(2deg)}30%{transform:translate(-10px,-3px) rotate(-1.8deg)}35%{transform:translate(10px,2px) rotate(1.8deg)}40%{transform:translate(-9px,-3px) rotate(-1.5deg)}45%{transform:translate(9px,2px) rotate(1.5deg)}50%{transform:translate(-7px,-2px) rotate(-1.2deg)}55%{transform:translate(7px,2px) rotate(1.2deg)}60%{transform:translate(-5px,-2px) rotate(-1deg)}65%{transform:translate(5px,1px) rotate(1deg)}70%{transform:translate(-4px,-1px) rotate(-.7deg)}75%{transform:translate(4px,1px) rotate(.7deg)}80%{transform:translate(-3px,-1px) rotate(-.4deg)}85%{transform:translate(3px,1px) rotate(.4deg)}90%{transform:translate(-2px,0) rotate(-.2deg)}95%{transform:translate(2px,0) rotate(.2deg)}100%{transform:none}}
 @keyframes chamber-result{from{opacity:0;transform:translateY(16px)}45%,100%{opacity:1;transform:none}}
 .cinematic-chamber .case-chamber-backdrop{animation:chamber-ready .45s ease-out both,chamber-drift 15s ease-in-out infinite alternate}
 .cinematic-chamber.phase-loading .case-sprite-stage,.cinematic-chamber.phase-loading .case-energy-halo,.cinematic-chamber.phase-loading .case-energy-ring{visibility:hidden}
@@ -209,6 +210,7 @@
 .cinematic-chamber .sprite-scene.burst .case-sprite-stage.chest-departing{animation:chest-dismiss .4s ease-in both!important}
 @keyframes chamber-ready{from{opacity:0}to{opacity:1}}
 @keyframes chest-dismiss{from{opacity:1;transform:translateY(-5px) scale(1.015)}to{opacity:0;transform:translateY(20px) scale(.9)}}
+@media(prefers-reduced-motion:reduce){.cinematic-chamber .sprite-scene.burst .case-sprite{animation:none!important}}
 @media(max-width:600px){.case-theater{width:100%;height:100dvh}.cinematic-chamber .case-theater-title h2{font-size:29px}.case-chamber-backdrop{background-position:center 70%}.case-charge-caption{bottom:7%}}
 @media(max-height:570px){.cinematic-chamber .case-theater-top{padding:7px 14px}.cinematic-chamber .case-theater-title{padding:0}.cinematic-chamber .case-theater-title h2{font-size:22px}.case-charge-caption{bottom:2%;gap:6px}.cinematic-chamber .case-sprite-stage{width:min(320px,55dvh)}.cinematic-chamber .case-reward{width:95px;height:95px;margin-bottom:12px}}
 @media(prefers-reduced-motion:reduce){.cinematic-chamber .case-chamber-backdrop,.cinematic-chamber .case-chamber-mist,.cinematic-chamber .case-energy-ring,.cinematic-chamber .sprite-scene.charging .case-sprite,.cinematic-chamber .sprite-scene.holding .case-sprite,.cinematic-chamber .sprite-scene.burst .case-sprite-stage{animation:none!important}.cinematic-chamber .case-reward,.cinematic-chamber .case-reveal-stage{animation:chamber-result 2s ease-out both!important}}

@@ -60,7 +60,7 @@ export function CaseEnergy({ phase, tone }: { phase: string; tone: string }) {
       const progress = active ? Math.min(1, (now - s.chargeStart) / 15000) : 0;
       const release = s.phase === "burst" ? Math.max(0, 1 - (now-s.since)/2000) : 0;
       host.style.setProperty("--charge", String(progress));
-      host.style.setProperty("--shake", `${motion.matches ? 0 : 1 + progress * 5}px`);
+      host.style.setProperty("--shake", `${motion.matches ? 0 : 2 + progress * 7}px`);
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = "lighter";
       // Slowly moving atmosphere, including before the player taps.
