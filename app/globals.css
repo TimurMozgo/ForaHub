@@ -135,3 +135,26 @@
 .sprite-scene .case-emerging-prize{top:27%;animation:energy-prize .5s ease-out both}
 @keyframes sprite-charge{0%,20%{transform:translateX(0)}30%{transform:translateX(-1px)}40%{transform:translateX(1px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}70%{transform:translateX(-3px)}78%{transform:translateX(3px)}85%{transform:translateX(-3px)}91%{transform:translateX(2px)}96%{transform:translateX(-2px)}100%{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.sprite-scene.charging .case-sprite{animation:none}.case-sprite-frame{transition:opacity 85ms linear!important}}
+.case-sprite-stage{position:relative;width:min(440px,90vw);aspect-ratio:1;z-index:2}
+.case-sprite-stage .case-sprite{width:100%;height:100%;display:block;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.case-sprite:disabled{cursor:default;opacity:1}
+.case-sprite:focus-visible{outline:2px solid var(--case-accent);outline-offset:4px;border-radius:26px}
+.sprite-scene .case-sprite-frame{transition:opacity 300ms ease-in-out!important}
+.sprite-scene.opening .case-sprite-stage{animation:chest-drop 900ms both cubic-bezier(.2,.7,.3,1)}
+.sprite-scene.waiting .case-sprite-stage{animation:chest-idle 2.6s ease-in-out infinite}
+.case-tap-ripple{position:absolute;left:20%;top:40%;width:60%;height:45%;border:2px solid var(--case-accent);border-radius:50%;z-index:5;pointer-events:none;animation:chest-tap .45s ease-out both}
+.case-orbs{position:absolute;inset:0;z-index:6;pointer-events:none}
+.case-orbs>i{position:absolute;left:50%;top:62%;width:15px;height:15px;border-radius:50%;background:#f4ffff;box-shadow:0 0 10px 4px var(--case-accent),0 0 30px 7px var(--case-accent);animation:orb-arrive .9s cubic-bezier(.4,0,.9,.5) both;animation-delay:var(--orb-delay)}
+.case-orbs b{position:absolute;bottom:70%;left:25%;width:50%;height:70px;border-radius:50%;background:linear-gradient(transparent,var(--case-accent));filter:blur(3px)}
+.sprite-scene.charging .case-energy-halo{display:block;animation:chest-charge-glow 2.7s ease-in both!important}
+.sprite-scene.holding .case-energy-halo{display:block;opacity:.75;transform:scale(1.6);filter:blur(30px)}
+.sprite-scene.burst .case-energy-halo{display:block;animation:chest-release 1.6s ease-out both!important}
+@keyframes chest-drop{0%{transform:translateY(-650px) scale(.8);opacity:0}12%{opacity:1}67%{transform:translateY(14px) scale(1.03,.94)}81%{transform:translateY(-18px) scale(.99,1.02)}100%{transform:translateY(0) scale(1)}}
+@keyframes chest-idle{50%{transform:translateY(-4px)}}
+@keyframes chest-tap{from{transform:scale(.65);opacity:.85}to{transform:scale(1.45);opacity:0}}
+@keyframes orb-arrive{0%{transform:translate(var(--orb-x),-420px) scale(.4);opacity:0}12%{opacity:1}85%{opacity:1}100%{transform:translate(0,0) scale(.15);opacity:0}}
+@keyframes chest-charge-glow{0%{opacity:.12;transform:scale(.65)}45%{opacity:.3}80%{opacity:.55}100%{opacity:.75;transform:scale(1.6)}}
+@keyframes chest-release{0%{opacity:.75;transform:scale(1.6)}30%{opacity:.85;transform:scale(1.9)}100%{opacity:.16;transform:scale(1.2)}}
+@media(prefers-reduced-motion:reduce){.sprite-scene.opening .case-sprite-stage{animation:chest-gentle-drop .6s both!important}.sprite-scene.waiting .case-sprite-stage{animation:none}.case-orbs>i{animation:orb-gentle .9s ease-out both!important;animation-delay:var(--orb-delay)!important}.case-orbs b{display:none}.case-tap-ripple{animation:chest-tap .45s ease-out both!important}}
+@keyframes chest-gentle-drop{from{transform:translateY(-35px);opacity:0}to{transform:none;opacity:1}}
+@keyframes orb-gentle{0%{transform:translate(var(--orb-x),-65px);opacity:0}35%{opacity:.8}100%{transform:translate(0,0);opacity:0}}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "lucide-react";
 
 type CaseId = "free" | "spark" | "pulse" | "legend";
 type Prize = { kind: "star" | "gift" | "gem"; amount?: number; label: string };
 type Case = { id: CaseId; title: string; price: number; image: string; tone: string; subtitle: string };
-type Phase = "opening" | "charging" | "holding" | "burst" | "revealed";
+type Phase = "opening" | "waiting" | "charging" | "holding" | "burst" | "revealed";
 
 const cases: Case[] = [
   { id: "free", title: "Ежедневный", price: 0, image: "/cases/case-free.png", tone: "cyan", subtitle: "Твоё первое открытие" },
@@ -45,6 +45,8 @@ export function CaseShowcase() {
   const activeSounds = useRef<Set<AudioBufferSourceNode>>(new Set());
   const master = useRef<GainNode | null>(null);
   const sequence = useRef(0);
+  const tapsRef = useRef(0);
+  const [taps, setTaps] = useState(0);
   const [frame, setFrame] = useState(0);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -61,7 +63,7 @@ export function CaseShowcase() {
     timers.current.forEach(clearTimeout);
     activeSounds.current.forEach(source => {try {source.stop();} catch {}});
     const current = context.current;
-    context.current = null;
+    context.current = null; master.current = null;
     if (current && current.state !== "closed") void current.close().catch(() => {});
   }, []);
 
@@ -111,6 +113,8 @@ export function CaseShowcase() {
 
   function clearSequence() {
     sequence.current++;
+    activeSounds.current.forEach(source => {try {source.stop();} catch {}});
+    activeSounds.current.clear();
     timers.current.forEach(clearTimeout);
     timers.current = [];
   }
@@ -119,6 +123,7 @@ export function CaseShowcase() {
     clearSequence();
     const token = sequence.current;
     const result = samplePrize(c.id);
+    tapsRef.current=0; setTaps(0);
     setFrame(0); setReady(false); setLoadError(false);
     setSelected(c);
     setPrize(result);
@@ -137,14 +142,27 @@ export function CaseShowcase() {
     await soundsReady;
     if (token !== sequence.current) return;
     setReady(true);
-    playOpen();
-    timers.current.push(setTimeout(() => { setPhase("charging"); setFrame(1); playCharge(); },650));
-    timers.current.push(setTimeout(() => setPhase("holding"),2850));
+    timers.current.push(setTimeout(() => { playSound("open",.45,.4); },600));
+    timers.current.push(setTimeout(() => setPhase("waiting"),900));
+  }
+
+  function tapChest() {
+    if (phase !== "waiting" || tapsRef.current >= 3 || closing) return;
+    const count=++tapsRef.current;
+    setTaps(count); playOpen();
+    if(count!==3) return;
+    setPhase("charging"); setFrame(1); playCharge();
+    // Each arrival coincides with the end of its visible flight.
+    [0,1,2,3,4,5,6,7].forEach(i => {
+      timers.current.push(setTimeout(() => playSound("charge",.12,.24),i*210));
+      timers.current.push(setTimeout(() => playSound("unlock",.16,.12),900+i*210));
+    });
+    timers.current.push(setTimeout(() => setPhase("holding"),2700));
     timers.current.push(setTimeout(() => {
       setPhase("burst"); setFrame(2); playSound("open",.35,.7);
-    },3250));
-    [3,4,5].forEach((index) => timers.current.push(setTimeout(() => setFrame(index),3250+(index-2)*170)));
-    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},4500));
+    },3100));
+    [3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),3100+(index-2)*280)));
+    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},4700));
   }
 
   function close() {
@@ -171,11 +189,14 @@ export function CaseShowcase() {
         {phase !== "revealed" && <div className={`case-opening-stage case-energy-scene sprite-scene ${ready ? phase : "loading"}`}>
           <div className="case-energy-halo" aria-hidden="true"/><div className="case-energy-ring" aria-hidden="true"/>
           <div className="case-energy-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:`${12+(i*17)%76}%`,top:`${20+(i*23)%60}%`,animationDelay:`${i*.13}s`}}/>)}</div>
-          <div className="case-sprite" role="img" aria-label={`Кейс ${selected.title}, кадр ${frame+1} из 6`}>
+          <div className="case-sprite-stage">
+          {phase === "charging" && <div className="case-orbs" aria-hidden="true">{Array.from({length:8},(_,i)=><i key={i} style={{"--orb-x":`${[-150,120,-80,160,-120,65,-35,95][i]}px`,"--orb-delay":`${i*210}ms`} as CSSProperties}><b/></i>)}</div>}
+          <button type="button" className={`case-sprite tap-${taps}`} disabled={phase !== "waiting" || !ready || closing} onClick={tapChest} aria-label={phase === "waiting" ? `Нажать на сундук: ${taps} из 3` : `Кейс ${selected.title}, кадр ${frame+1} из 6`}>
+          <span key={taps} className="case-tap-ripple" aria-hidden="true" style={{display:taps ? undefined : "none"}}/>
             {Array.from({length:6},(_,i)=><div key={i} className={`case-sprite-frame ${ready && frame === i ? "visible" : ""}`} style={{backgroundImage:`url(/cases/${selected.id}-frames.png)`,backgroundPosition:`${(i%3)*50}% ${i<3?0:100}%`}}/>)}
-          </div>
+          </button></div>
           {phase === "burst" && frame === 5 && <span className="case-emerging-prize">{iconFor(prize,76)}</span>}
-          <span className="case-opening-caption">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Пробуждаем кейс…" : phase === "charging" ? "Энергия нарастает…" : phase === "holding" ? "Тот самый момент…" : "Открываем!"}</span>
+          <span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия нарастает…" : phase === "holding" ? "Тот самый момент…" : "Открываем!"}</span>
         </div>}
         {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
       </>}
