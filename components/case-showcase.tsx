@@ -6,7 +6,7 @@ import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "luci
 type CaseId = "free" | "spark" | "pulse" | "legend";
 type Prize = { kind: "star" | "gift" | "gem"; amount?: number; label: string };
 type Case = { id: CaseId; title: string; price: number; image: string; tone: string; subtitle: string };
-type Phase = "opening" | "rolling" | "revealed";
+type Phase = "opening" | "charging" | "holding" | "burst" | "revealed";
 
 const cases: Case[] = [
   { id: "free", title: "Ежедневный", price: 0, image: "/cases/case-free.png", tone: "cyan", subtitle: "Твоё первое открытие" },
@@ -22,7 +22,7 @@ const SAMPLE_PRIZES: Prize[] = [
   { kind: "gift", label: "Подарок" },
   { kind: "gem", label: "NFT-подарок" },
 ];
-const FINAL_INDEX = 32;
+
 
 function iconFor(prize: Prize, size = 35) {
   if (prize.kind === "gem") return <Gem size={size} strokeWidth={1.6} />;
@@ -34,15 +34,6 @@ function samplePrize(caseId: CaseId): Prize {
   // Preview-only outcomes. No balance, inventory, or payment is changed.
   const choices = caseId === "free" ? SAMPLE_PRIZES.slice(0, 2) : caseId === "spark" ? SAMPLE_PRIZES.slice(0, 4) : caseId === "pulse" ? [SAMPLE_PRIZES[2], SAMPLE_PRIZES[3]] : [SAMPLE_PRIZES[3]];
   return choices[Math.floor(Math.random() * choices.length)];
-}
-
-function makeStrip(final: Prize): Prize[] {
-  const strip = Array.from({ length: 38 }, () => {
-    const roll = Math.random();
-    return roll < .44 ? SAMPLE_PRIZES[0] : roll < .69 ? SAMPLE_PRIZES[1] : roll < .82 ? SAMPLE_PRIZES[2] : roll < .97 ? SAMPLE_PRIZES[3] : SAMPLE_PRIZES[4];
-  });
-  strip[FINAL_INDEX] = final;
-  return strip;
 }
 
 function soundTone(ctx: AudioContext, start: number, end: number, length: number, volume: number, type: OscillatorType = "sine") {
@@ -72,21 +63,16 @@ function soundNoise(ctx: AudioContext, length: number, volume: number) {
 
 export function CaseShowcase() {
   const dialog = useRef<HTMLDialogElement>(null);
-  const track = useRef<HTMLDivElement>(null);
-  const viewport = useRef<HTMLDivElement>(null);
-  const raf = useRef<number>(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const context = useRef<AudioContext | null>(null);
   const audioOn = useRef(true);
   const [selected, setSelected] = useState<Case | null>(null);
   const [phase, setPhase] = useState<Phase>("opening");
-  const [strip, setStrip] = useState<Prize[]>([]);
   const [prize, setPrize] = useState<Prize>(SAMPLE_PRIZES[0]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [closing, setClosing] = useState(false);
 
   useEffect(() => () => {
-    cancelAnimationFrame(raf.current);
     timers.current.forEach(clearTimeout);
     const current = context.current;
     context.current = null;
@@ -117,9 +103,14 @@ export function CaseShowcase() {
     timers.current.push(setTimeout(() => { if (audioOn.current) { soundTone(ctx, 470, 940, .35, .055); soundNoise(ctx, .22, .06); } }, 350));
   }
 
-  function playTick() {
-    const ctx = audio();
-    if (ctx) soundTone(ctx, 940, 510, .055, .028, "triangle");
+  function playCharge() {
+    const ctx = audio(); if (!ctx) return;
+    soundTone(ctx, 85, 310, 1.9, .06, "triangle");
+    [0,420,780,1080,1330,1540].forEach((delay,i) => {
+      timers.current.push(setTimeout(() => { if(audioOn.current) {
+        soundTone(ctx,160+i*48,90,.12,.035,"triangle"); soundNoise(ctx,.06,.025);
+      } },delay));
+    });
   }
 
   function playReveal() {
@@ -134,7 +125,6 @@ export function CaseShowcase() {
   }
 
   function clearSequence() {
-    cancelAnimationFrame(raf.current);
     timers.current.forEach(clearTimeout);
     timers.current = [];
   }
@@ -144,36 +134,18 @@ export function CaseShowcase() {
     const result = samplePrize(c.id);
     setSelected(c);
     setPrize(result);
-    setStrip(makeStrip(result));
+
     setPhase("opening");
     setClosing(false);
     if (!dialog.current?.open) dialog.current?.showModal();
     playOpen();
+    timers.current.push(setTimeout(() => { setPhase("charging"); playCharge(); },650));
+    timers.current.push(setTimeout(() => setPhase("holding"),2850));
     timers.current.push(setTimeout(() => {
-      setPhase("rolling");
-      raf.current = requestAnimationFrame(() => { raf.current = requestAnimationFrame(roll); });
-    }, 900));
-  }
-
-  function roll() {
-    const cards = track.current?.children;
-    const target = cards?.[FINAL_INDEX] as HTMLElement | undefined;
-    if (!target || !viewport.current || !track.current) return;
-    const center = viewport.current.clientWidth / 2;
-    const end = center - target.offsetLeft - target.offsetWidth / 2;
-    const started = performance.now();
-    let previous = -1;
-    const frame = (now: number) => {
-      const t = Math.min(1, (now - started) / 4850);
-      const eased = 1 - Math.pow(1 - t, 4.5);
-      const x = end * eased;
-      if (track.current) track.current.style.transform = `translate3d(${x}px,0,0)`;
-      const current = Math.floor((center - x) / (target.offsetWidth + 10));
-      if (current > previous && current < FINAL_INDEX + 1) { if (previous >= 0) playTick(); previous = current; }
-      if (t < 1) raf.current = requestAnimationFrame(frame);
-      else timers.current.push(setTimeout(() => { setPhase("revealed"); playReveal(); }, 330));
-    };
-    raf.current = requestAnimationFrame(frame);
+      setPhase("burst"); const ctx=audio();
+      if(ctx){soundNoise(ctx,.45,.075);soundTone(ctx,100,45,.45,.09,"triangle");}
+    },3250));
+    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},4000));
   }
 
   function close() {
@@ -197,8 +169,13 @@ export function CaseShowcase() {
     <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className="case-theater-inner"><div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
       {selected && <><div className="case-theater-title"><span className="eyebrow">{selected.price === 0 ? "БЕСПЛАТНЫЙ КЕЙС" : `${selected.price} STARS`}</span><h2>{selected.title}</h2></div>
-        {phase === "opening" && <div className="case-opening-stage"><div className="case-opening-glow"/><div className="case-chest"><div className="case-chest-body" style={{ backgroundImage: `url(${selected.image})` }}/><div className="case-chest-lid" style={{ backgroundImage: `url(${selected.image})` }}/></div><span className="case-opening-caption">Кейс открывается…</span></div>}
-        {phase === "rolling" && <div className="case-roll-stage"><div className="case-roll-viewport" ref={viewport}><div className="case-roll-track" ref={track}>{strip.map((item, i) => <div className={`case-roll-item ${item.kind}`} key={i}>{iconFor(item)}<span>{item.kind === "star" ? `${item.amount} ⭐` : item.kind === "gem" ? "NFT" : "Подарок"}</span></div>)}</div><div className="case-roll-marker"/></div><div className="case-roll-status"><span className="case-roll-dots"><i/><i/><i/></span>Выбираем приз…</div></div>}
+        {phase !== "revealed" && <div className={`case-opening-stage case-energy-scene ${phase}`}>
+          <div className="case-energy-halo" aria-hidden="true"/><div className="case-energy-ring" aria-hidden="true"/>
+          <div className="case-energy-sparks" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{left:`${12+(i*17)%76}%`,top:`${20+(i*23)%60}%`,animationDelay:`${i*.13}s`}}/>)}</div>
+          <div className="case-chest"><div className="case-chest-body" style={{backgroundImage:`url(${selected.image})`}}/><div className="case-chest-lid" style={{backgroundImage:`url(${selected.image})`}}/><div className="case-energy-seam"/></div>
+          {phase === "burst" && <span className="case-emerging-prize">{iconFor(prize,76)}</span>}
+          <span className="case-opening-caption">{phase === "opening" ? "Пробуждаем кейс…" : phase === "charging" ? "Энергия нарастает…" : phase === "holding" ? "Тот самый момент…" : "Открываем!"}</span>
+        </div>}
         {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
       </>}
       </div>
