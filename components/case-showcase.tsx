@@ -88,7 +88,9 @@ export function CaseShowcase() {
   useEffect(() => () => {
     cancelAnimationFrame(raf.current);
     timers.current.forEach(clearTimeout);
-    void context.current?.close();
+    const current = context.current;
+    context.current = null;
+    if (current && current.state !== "closed") void current.close().catch(() => {});
   }, []);
 
   useEffect(() => {
