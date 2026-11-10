@@ -35,8 +35,8 @@ export function risingHum(ctx: AudioContext, output: AudioNode, track: Track) {
     source.frequency.exponentialRampToValueAtTime(hz*.85,at+15.1);
     gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.009/(i+1),at+.45);
     gain.gain.exponentialRampToValueAtTime(.12/(i+1),at+14.05);
-    gain.gain.linearRampToValueAtTime(.012/(i+1),at+14.65);gain.gain.linearRampToValueAtTime(0,at+15.9);
-    source.connect(gain).connect(output);track(source,[gain]);source.start(at);source.stop(at+15.92);
+    gain.gain.linearRampToValueAtTime(.012/(i+1),at+14.5);gain.gain.linearRampToValueAtTime(0,at+14.8);
+    source.connect(gain).connect(output);track(source,[gain]);source.start(at);source.stop(at+14.82);
   });
 }
 

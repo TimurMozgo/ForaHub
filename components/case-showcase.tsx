@@ -190,9 +190,9 @@ export function CaseShowcase() {
     timers.current.push(setTimeout(() => {
       setPhase("burst"); setFrame(1); soundtrack("open");
     },15000));
-    [2,3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),15000+(index-1)*400)));
-    timers.current.push(setTimeout(() => {setPhase("revealed");soundtrack("prize");},17000));
-    timers.current.push(setTimeout(() => setSettled(true),19000));
+    timers.current.push(setTimeout(()=>setFrame(2),15350));
+    timers.current.push(setTimeout(() => {setPhase("revealed");soundtrack("prize");},15800));
+    timers.current.push(setTimeout(() => setSettled(true),17800));
   }
 
   function close() {
@@ -216,11 +216,12 @@ export function CaseShowcase() {
     <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
       {selected && <>{ready && <div className="case-chamber-backdrop" aria-hidden="true"/>}<div className="case-chamber-mist" aria-hidden="true"/><div className="case-chamber-light" aria-hidden="true"/><CaseEnergy key={selected.id} phase={ready ? phase : "loading"} tone={selected.tone}/></>}
+      {(phase === "burst" || phase === "revealed") && <div className="case-finale-flash" aria-hidden="true"/>}
       <div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; if(master.current) master.current.gain.value = !soundEnabled ? 1 : 0; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
       {selected && <><div className="case-theater-title"><span className="eyebrow">{selected.price === 0 ? "БЕСПЛАТНЫЙ КЕЙС" : `${selected.price} STARS`}</span><h2>{selected.title}</h2></div>
         {phase !== "revealed" && <div className={`case-opening-stage case-energy-scene sprite-scene ${ready ? phase : "loading"}`}>
           <div className="case-energy-halo" aria-hidden="true"/><div className="case-energy-ring" aria-hidden="true"/>
-          <div className={`case-sprite-stage ${phase === "burst" && frame === 5 ? "chest-departing" : ""}`}>
+          <div className={`case-sprite-stage ${phase === "burst" && frame >= 2 ? "chest-departing" : ""}`}>
           <button type="button" className={`case-sprite tap-${taps}`} disabled={phase !== "waiting" || !ready || closing} onClick={tapChest} aria-label={phase === "waiting" ? `Нажать на сундук: ${taps} из 3` : `Кейс ${selected.title}, кадр ${frame+1} из 6`}>
           <span key={taps} className="case-tap-ripple" aria-hidden="true" style={{display:taps ? undefined : "none"}}/>
             {Array.from({length:6},(_,i)=><div key={i} className={`case-sprite-frame ${ready && frame === i ? "visible" : ""}`} style={{backgroundImage:`url(/cases/${selected.id}-frames.png)`,backgroundPosition:`${(i%3)*50}% ${i<3?0:100}%`}}/>)}
