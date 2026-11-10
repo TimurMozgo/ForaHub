@@ -149,10 +149,6 @@ export function CaseShowcase() {
     setClosing(false);
     if (!dialog.current?.open) dialog.current?.showModal();
     playOpen();
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPhase("revealed");
-      return;
-    }
     timers.current.push(setTimeout(() => {
       setPhase("rolling");
       raf.current = requestAnimationFrame(() => { raf.current = requestAnimationFrame(roll); });
