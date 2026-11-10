@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CaseEnergy } from "./case-energy";
+import { sparkFlight, risingHum, unsealSound, prizeChime } from "./case-soundtrack";
 import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "lucide-react";
 
 type CaseId = "free" | "spark" | "pulse" | "legend";
@@ -43,7 +44,7 @@ export function CaseShowcase() {
   const context = useRef<AudioContext | null>(null);
   const audioOn = useRef(true);
   const buffers = useRef<Record<string,AudioBuffer>>({});
-  const activeSounds = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const activeSounds = useRef<Set<AudioScheduledSourceNode>>(new Set());
   const master = useRef<GainNode | null>(null);
   const sequence = useRef(0);
   const tapsRef = useRef(0);
@@ -94,7 +95,7 @@ export function CaseShowcase() {
 
   async function loadSounds() {
     const ctx=audio(); if (!ctx) return;
-    await Promise.allSettled(["tap-v2.wav","land-v2.wav","flight-v2.wav","charge-v2.ogg","reveal-v2.ogg"].map(async file => {
+    await Promise.allSettled(["tap-v2.wav","land-v2.wav"].map(async file => {
       const key=file.split(".")[0]; if (buffers.current[key]) return;
       const response=await fetch("/cases/audio/"+file);
       if (!response.ok) throw new Error("Audio unavailable");
@@ -119,8 +120,17 @@ export function CaseShowcase() {
     source.start(0,0,length);
   }
   function playOpen(){playSound("tap-v2",.35,.18);}
-  function playCharge(){playSound("charge-v2",.2,2.5);}
-  function playReveal(){playSound("reveal-v2",.32,1.1);}
+  function trackSound(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
+    activeSounds.current.add(source);
+    source.onended=()=>{activeSounds.current.delete(source);source.disconnect();nodes.forEach(node=>node.disconnect());};
+  }
+  function soundtrack(kind: "flight" | "hum" | "open" | "prize", index=0) {
+    const ctx=audio();if(!ctx || !master.current)return;
+    if(kind==="flight")sparkFlight(ctx,master.current,trackSound,index);
+    else if(kind==="hum")risingHum(ctx,master.current,trackSound);
+    else if(kind==="open")unsealSound(ctx,master.current,trackSound);
+    else prizeChime(ctx,master.current,trackSound);
+  }
 
   function clearSequence() {
     sequence.current++;
@@ -163,19 +173,18 @@ export function CaseShowcase() {
     const count=++tapsRef.current;
     setTaps(count); playOpen();
     if(count!==3) return;
-    setPhase("charging"); setFrame(0); playCharge();
+    setPhase("charging"); setFrame(0);
     // Six seconds of gathering energy; two opening; two for the prize entrance.
-    Array.from({length:12},(_,i)=>i).forEach(i => {
-      timers.current.push(setTimeout(() => playSound("flight-v2",.09+i*.008,.55),i*460));
+    Array.from({length:13},(_,i)=>i).forEach(i => {
+      timers.current.push(setTimeout(() => soundtrack("flight",i),i*390));
     });
-    timers.current.push(setTimeout(playCharge,2400));
-    timers.current.push(setTimeout(playCharge,4600));
+    timers.current.push(setTimeout(() => soundtrack("hum"),850));
     timers.current.push(setTimeout(() => setPhase("holding"),5000));
     timers.current.push(setTimeout(() => {
-      setPhase("burst"); setFrame(1); playSound("flight-v2",.4,.8);
+      setPhase("burst"); setFrame(1); soundtrack("open");
     },6000));
     [2,3,4,5].forEach(index=>timers.current.push(setTimeout(()=>setFrame(index),6000+(index-1)*400)));
-    timers.current.push(setTimeout(() => {setPhase("revealed");playReveal();},8000));
+    timers.current.push(setTimeout(() => {setPhase("revealed");soundtrack("prize");},8000));
     timers.current.push(setTimeout(() => setSettled(true),10000));
   }
 
