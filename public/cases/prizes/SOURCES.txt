@@ -1,0 +1,12 @@
+Gift artwork sources (downloaded 2026-11-11):
+Basic gift previews: https://github.com/denzyve/cdn-telegram-gifts
+https://raw.githubusercontent.com/denzyve/cdn-telegram-gifts/main/assets/webp/gift_<id>.webp
+heart 5170145012310081615; bear 5170233102089322756; box 5170250947678437525;
+rose 5168103777563050263; cake 5170144170496491616; flowers 5170314324215857265;
+rocket 5170564780938756245; champagne 6028601630662853006; trophy 5168043875654172773;
+ring 5170690322832818290; diamond 5170521118301225164.
+Collection illustrations: https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/noupdate/<name>.webp
+Names: Resistance Dog, Lol Pop, Desk Calendar, Jester Hat, Homemade Cake, B-Day Candle, Party Sparkler, Ginger Cookie, Candy Cane.
+Redo reference confirmed by user: https://telegifter.ru/gifts/collections/resistance-dog/
+Original artwork retained without background modifications; all 20 WebP files verified to contain transparent pixels.
+These are representative collection illustrations, not specific owned NFT instances or an assertion of live inventory/market prices.

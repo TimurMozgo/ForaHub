@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { CaseEnergy } from "./case-energy";
 import { sparkFlight, risingHum, unsealSound, prizeChime } from "./case-soundtrack";
+import { getCasePrizes, GIFTS, type Prize, type CaseId } from "./case-prizes";
 import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "lucide-react";
 
-type CaseId = "free" | "spark" | "pulse" | "legend";
-type Prize = { kind: "star" | "gift" | "gem"; amount?: number; label: string };
 type Case = { id: CaseId; title: string; price: number; image: string; tone: string; subtitle: string };
 type Phase = "opening" | "waiting" | "charging" | "holding" | "burst" | "revealed";
 
@@ -21,12 +20,11 @@ const SAMPLE_PRIZES: Prize[] = [
   { kind: "star", amount: 1, label: "1 звезда" },
   { kind: "star", amount: 2, label: "2 звезды" },
   { kind: "star", amount: 5, label: "5 звёзд" },
-  { kind: "gift", label: "Подарок" },
-  { kind: "gem", label: "NFT-подарок" },
 ];
 
 
 function iconFor(prize: Prize, size = 35) {
+  if (prize.image) return <img className="case-prize-image" src={prize.image} alt="" width={size} height={size} decoding="async"/>;
   if (prize.kind === "gem") return <Gem size={size} strokeWidth={1.6} />;
   if (prize.kind === "gift") return <Gift size={size} strokeWidth={1.6} />;
   return <Star size={size} fill="currentColor" strokeWidth={1.4} />;
@@ -34,7 +32,7 @@ function iconFor(prize: Prize, size = 35) {
 
 function samplePrize(caseId: CaseId): Prize {
   // Preview-only outcomes. No balance, inventory, or payment is changed.
-  const choices = caseId === "free" ? SAMPLE_PRIZES.slice(0, 2) : caseId === "spark" ? SAMPLE_PRIZES.slice(0, 4) : caseId === "pulse" ? [SAMPLE_PRIZES[2], SAMPLE_PRIZES[3]] : [SAMPLE_PRIZES[3]];
+  const choices = [...SAMPLE_PRIZES.slice(0,caseId==="free"?2:3),...getCasePrizes(caseId)];
   return choices[Math.floor(Math.random() * choices.length)];
 }
 
@@ -59,6 +57,7 @@ export function CaseShowcase() {
   const [closing, setClosing] = useState(false);
   const [settled, setSettled] = useState(false);
   const [energyStep, setEnergyStep] = useState(0);
+  const [catalogCase, setCatalogCase] = useState<CaseId>("free");
 
   useEffect(() => {
     const background = new Image();
@@ -163,7 +162,9 @@ export function CaseShowcase() {
     const sheet = new Image();
     sheet.src = "/cases/" + c.id + "-frames.png";
     const backdrop = new Image(); backdrop.src = "/cases/energy-chamber.png";
-    try { await Promise.all([sheet.decode(),backdrop.decode()]); } catch {
+    const rewardImage = result.image ? new Image() : null;
+    if(rewardImage) rewardImage.src=result.image!;
+    try { await Promise.all([sheet.decode(),backdrop.decode(),...(rewardImage?[rewardImage.decode()]:[])]); } catch {
       if (token === sequence.current) setLoadError(true);
       return;
     }
@@ -212,6 +213,13 @@ export function CaseShowcase() {
       <span className="case-card-art" style={{ backgroundImage: `url(${c.image})` }}><span className="case-card-shine" /></span>
       <span className="case-card-copy"><span className="case-card-kicker">{c.price === 0 ? "ЕЖЕДНЕВНЫЙ" : "КЕЙС GAME HUB"}</span><strong>{c.title}</strong><small>{c.subtitle}</small><span className="case-card-bottom"><span>{c.price === 0 ? "Бесплатно" : <><Star size={14} fill="currentColor" /> {c.price} Stars</>}</span><span className="case-card-arrow"><ArrowRight size={16} /></span></span></span>
     </button>)}</div>
+    <section className={`case-prize-collection ${cases.find(c=>c.id===catalogCase)?.tone}`} aria-label="Содержимое кейсов">
+      <div className="case-collection-heading"><div><span className="eyebrow">КОЛЛЕКЦИЯ ПРИЗОВ</span><h2>Что внутри кейса</h2></div><span>{getCasePrizes(catalogCase).length} подарков + звёзды</span></div>
+      <div className="case-collection-tabs" aria-label="Выбрать коллекцию">{cases.map(c=><button key={c.id} type="button" aria-pressed={catalogCase===c.id} onClick={()=>setCatalogCase(c.id)}>{c.title}</button>)}</div>
+      <div className="case-top-prize"><img src={GIFTS.redo.image} alt="Redo — собака в капюшоне" width={120} height={120} loading="lazy"/><div><span className="eyebrow">ГЛАВНЫЙ ПРИЗ</span><h3>Redo</h3><p>Resistance Dog · в каждом кейсе</p></div><Gem size={24}/></div>
+      <div className="case-prize-grid">{getCasePrizes(catalogCase).filter(p=>!p.topPrize).map(p=><article className={`case-prize-tile ${p.kind}`} key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy" decoding="async"/><span>{p.kind==="gem"?"КОЛЛЕКЦИОННЫЙ":"ПОДАРОК"}</span><h3>{p.label}</h3></article>)}</div>
+      <p className="case-collection-note">Демонстрационная коллекция. Изображения представляют коллекции; конкретные NFT и реальные шансы будут определены при подключении выдачи.</p>
+    </section>
     <div className="case-preview-note"><Sparkles size={18} /><p><strong>Пока это просмотр анимации.</strong> Оплата, начисление звёзд и выдача подарков появятся после подключения бота и призового фонда.</p></div>
     <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
