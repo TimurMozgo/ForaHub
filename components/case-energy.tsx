@@ -75,17 +75,25 @@ export function CaseEnergy({ phase, tone }: { phase: string; tone: string }) {
       }
       if(active) {
         const intensity = .3 + progress*.7;
-        glow(targetX,targetY,width*(.22+progress*.2),.12+progress*.25);
+        const elapsed = now-s.chargeStart;
+        const arrived = Math.min(1, Math.max(0,(elapsed-850)/1000));
+        glow(targetX,targetY,width*(.22+progress*.2),arrived*(.08+progress*.18));
         // Curved ribbons and tapered spark trails all converge INTO the clasp.
         for(let lane=0;lane<6;lane++) {
+          const age = elapsed-lane*65;
+          if(age<=0) continue;
+          const head=Math.min(1,age/900);
           ctx.beginPath();
-          for(let j=0;j<=45;j++){const p=point(lane,j/45,time);if(j===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}
-          ctx.strokeStyle=`rgba(${color},${intensity*.14})`;ctx.lineWidth=motion.matches?1:2;ctx.stroke();
+          for(let j=0;j<=45;j++){const p=point(lane,head*j/45,time);if(j===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}
+          ctx.strokeStyle=`rgba(${color},${intensity*.09})`;ctx.lineWidth=motion.matches?1:2;ctx.stroke();
         }
         const sparks=motion.matches?45:260;
         for(let i=0;i<sparks;i++) {
           const lane=i%6;
-          const t=((now-s.chargeStart)/ (1800+(i%11)*90) + i*.6180339)%1;
+          // Every spark is born at the edge, never pre-populated along the path.
+          const age=elapsed-Math.floor(i/6)*24-lane*65;
+          if(age<0) continue;
+          const t=(age/(850+(i%11)*35))%1;
           const p=point(lane,t,time), tail=point(lane,Math.max(0,t-.018-(i%5)*.004),time);
           const scatter=(1-t)*(6+(i%9)*3);
           const dx=Math.sin(i*13.7)*scatter,dy=Math.cos(i*7.1)*scatter;
@@ -94,7 +102,7 @@ export function CaseEnergy({ phase, tone }: { phase: string; tone: string }) {
           ctx.beginPath();ctx.moveTo(tail.x+dx,tail.y+dy);ctx.lineTo(p.x+dx,p.y+dy);ctx.stroke();
           ctx.fillStyle=`rgba(235,255,255,${alpha})`;ctx.beginPath();ctx.arc(p.x+dx,p.y+dy,i%7===0?1.4:.65,0,Math.PI*2);ctx.fill();
         }
-        glow(targetX,targetY,24+progress*22,.5);
+        glow(targetX,targetY,20+progress*18,arrived*.35);
       }
       if(release>0) {
         glow(targetX,targetY,width*.55,release*.4);

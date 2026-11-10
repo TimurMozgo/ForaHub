@@ -58,6 +58,12 @@ export function CaseShowcase() {
   const [closing, setClosing] = useState(false);
   const [settled, setSettled] = useState(false);
 
+  useEffect(() => {
+    const background = new Image();
+    background.src = "/cases/energy-chamber.png";
+    void background.decode().catch(() => {});
+  }, []);
+
   useEffect(() => () => {
     sequence.current++;
     activeSounds.current.forEach(source => {try {source.stop();} catch {}});
@@ -193,17 +199,16 @@ export function CaseShowcase() {
     <div className="case-preview-note"><Sparkles size={18} /><p><strong>Пока это просмотр анимации.</strong> Оплата, начисление звёзд и выдача подарков появятся после подключения бота и призового фонда.</p></div>
     <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
-      {selected && <><div className="case-chamber-backdrop" aria-hidden="true"/><div className="case-chamber-mist" aria-hidden="true"/><div className="case-chamber-light" aria-hidden="true"/><CaseEnergy key={selected.id} phase={ready ? phase : "loading"} tone={selected.tone}/></>}
+      {selected && <>{ready && <div className="case-chamber-backdrop" aria-hidden="true"/>}<div className="case-chamber-mist" aria-hidden="true"/><div className="case-chamber-light" aria-hidden="true"/><CaseEnergy key={selected.id} phase={ready ? phase : "loading"} tone={selected.tone}/></>}
       <div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; if(master.current) master.current.gain.value = !soundEnabled ? 1 : 0; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
       {selected && <><div className="case-theater-title"><span className="eyebrow">{selected.price === 0 ? "БЕСПЛАТНЫЙ КЕЙС" : `${selected.price} STARS`}</span><h2>{selected.title}</h2></div>
         {phase !== "revealed" && <div className={`case-opening-stage case-energy-scene sprite-scene ${ready ? phase : "loading"}`}>
           <div className="case-energy-halo" aria-hidden="true"/><div className="case-energy-ring" aria-hidden="true"/>
-          <div className="case-sprite-stage">
+          <div className={`case-sprite-stage ${phase === "burst" && frame === 5 ? "chest-departing" : ""}`}>
           <button type="button" className={`case-sprite tap-${taps}`} disabled={phase !== "waiting" || !ready || closing} onClick={tapChest} aria-label={phase === "waiting" ? `Нажать на сундук: ${taps} из 3` : `Кейс ${selected.title}, кадр ${frame+1} из 6`}>
           <span key={taps} className="case-tap-ripple" aria-hidden="true" style={{display:taps ? undefined : "none"}}/>
             {Array.from({length:6},(_,i)=><div key={i} className={`case-sprite-frame ${ready && frame === i ? "visible" : ""}`} style={{backgroundImage:`url(/cases/${selected.id}-frames.png)`,backgroundPosition:`${(i%3)*50}% ${i<3?0:100}%`}}/>)}
           </button></div>
-          {phase === "burst" && frame === 5 && <span className="case-emerging-prize">{iconFor(prize,76)}</span>}
           <div className="case-charge-caption"><span className="case-opening-caption" aria-live="polite">{loadError ? "Не удалось загрузить кейс. Закрой и попробуй ещё раз." : !ready ? "Готовим кейс…" : phase === "opening" ? "Сундук приближается…" : phase === "waiting" ? `Нажми на сундук · ${taps} / 3` : phase === "charging" ? "Энергия пробуждается…" : phase === "holding" ? "Уже не удержать…" : "Открываем!"}</span><div className="case-tap-indicators" aria-hidden="true">{[1,2,3].map(i=><i key={i} className={taps>=i?"lit":""}/>)}</div></div>
         </div>}
         {phase === "revealed" && <div className="case-reveal-stage" role="status"><div className="case-confetti" aria-hidden="true">{Array.from({length:18},(_,i)=><i key={i} style={{left:`${(i*37)%100}%`,animationDelay:`${(i%7)*.055}s`}} />)}</div><span className={`case-reward ${prize.kind}`}>{iconFor(prize, 76)}</span><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>}
