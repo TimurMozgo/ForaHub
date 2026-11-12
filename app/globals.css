@@ -294,3 +294,5 @@ body:has(>.hub-case-player) .bottom-nav,body:has(>.hub-case-player) .sidebar,bod
 body>.hub-case-player{position:fixed;inset:0;z-index:2147483000;width:100vw;height:100dvh;padding:0;animation:none}
 body>.hub-case-player .hub-case-player-close,body>.hub-case-player .hub-case-sound{background:transparent;border:0;backdrop-filter:none;color:#ffffff70}
 body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-case-sound:hover{color:#fff;background:#ffffff0c}
+.hub-case-player::backdrop{background:#080e19}
+.hub-case-player.is-opening .hub-case-sound,.hub-case-player.is-opening .hub-case-player-close{visibility:hidden;pointer-events:none}
