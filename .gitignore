@@ -1,5 +1,8 @@
 # Dependencies
 /node_modules/
+/tools/case-three/node_modules/
+/tools/case-three/app.bundle.js
+/tools/case-three/daily-chest.glb
 /.pnp
 .pnp.*
 # Keep authored Yarn tooling if the project adopts Yarn.

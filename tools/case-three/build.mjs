@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {build} from 'esbuild';
+import {createChest} from './model.mjs';
+globalThis.FileReader=class{readAsArrayBuffer(blob){blob.arrayBuffer().then(buffer=>{this.result=buffer;this.onloadend?.();});}readAsDataURL(blob){blob.arrayBuffer().then(buffer=>{this.result='data:'+blob.type+';base64,'+Buffer.from(buffer).toString('base64');this.onloadend?.();});}};
+const model=createChest();
+const binary=await new GLTFExporter().parseAsync(model,{binary:true});
+await fs.writeFile(new URL('./daily-chest.glb',import.meta.url),Buffer.from(binary));
+const roundtrip=await new GLTFLoader().parseAsync(binary,'');
+for(const name of ['front','back','left','right','lid','base','core'])if(!roundtrip.scene.getObjectByName(name))throw Error('Missing node '+name);
+let meshes=0,triangles=0;roundtrip.scene.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}});
+await build({entryPoints:[new URL('./app.js',import.meta.url).pathname.replace(/^\/(.:)/,'$1')],bundle:true,format:'iife',outfile:new URL('./app.bundle.js',import.meta.url).pathname.replace(/^\/(.:)/,'$1'),loader:{'.glb':'binary'},minify:true});
+console.log(JSON.stringify({glbBytes:binary.byteLength,meshes,triangles,roundtrip:'PASS',bundle:'PASS'}));
