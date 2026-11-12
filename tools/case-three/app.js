@@ -59,13 +59,13 @@ const collectionIndices=soloIndex===null?[0,1,2]:[soloIndex];
 const imageUrls=[...new Set(collectionIndices.flatMap(i=>getOpeningPrizes(i).map(p=>p.image).filter(Boolean)))];
 await Promise.all(imageUrls.map(async url=>{const texture=await textureLoader.loadAsync(url);texture.colorSpace=THREE.SRGBColorSpace;prizeTextures.set(url,texture);}));
 const giftMaterial=new THREE.SpriteMaterial({transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
-const giftSprite=new THREE.Sprite(giftMaterial);giftSprite.scale.set(3.2,3.2,1);giftSprite.renderOrder=3;reward.add(giftSprite);
+const giftSprite=new THREE.Sprite(giftMaterial);giftSprite.scale.set(2.55,2.55,1);giftSprite.renderOrder=3;reward.add(giftSprite);
 const auraCanvas=document.createElement('canvas');auraCanvas.width=auraCanvas.height=256;
 const auraContext=auraCanvas.getContext('2d'),gradient=auraContext.createRadialGradient(128,128,8,128,128,128);
 gradient.addColorStop(0,'rgba(255,255,255,.7)');gradient.addColorStop(.3,'rgba(255,255,255,.3)');gradient.addColorStop(1,'rgba(255,255,255,0)');auraContext.fillStyle=gradient;auraContext.fillRect(0,0,256,256);
 const auraTexture=new THREE.CanvasTexture(auraCanvas),auraMaterial=new THREE.SpriteMaterial({map:auraTexture,transparent:true,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});
-const aura=new THREE.Sprite(auraMaterial);aura.scale.set(5.5,5.5,1);aura.renderOrder=2;reward.add(aura);
-star.renderOrder=4;star.scale.setScalar(1.7);
+const aura=new THREE.Sprite(auraMaterial);aura.scale.set(4.7,4.7,1);aura.renderOrder=2;reward.add(aura);
+star.renderOrder=4;star.scale.setScalar(1.35);
 function preparePrize(index){
  const prize=pickOpeningPrize(index);star.visible=prize.kind==='star';giftSprite.visible=!star.visible;
  if(prize.image){giftMaterial.map=prizeTextures.get(prize.image);giftMaterial.needsUpdate=true;}
