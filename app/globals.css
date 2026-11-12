@@ -280,3 +280,12 @@
 @media(max-width:600px){.hub-case-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hub-case-card{border-radius:17px}.hub-case-card-info{padding:13px 12px 7px}.hub-case-card-info strong{font-size:16px}.hub-case-card-caption{padding:0 12px 14px;font-size:11px}.hub-case-player{padding:6px}.hub-case-card-price{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.hub-case-card,.hub-case-player{transition:none;animation:none}}
 .hub-case-sound{position:absolute;left:15px;top:15px;z-index:2;border:1px solid #ffffff25;border-radius:20px;padding:9px 13px;background:#101826;color:#d5bd87;font-size:11px;cursor:pointer}.hub-case-sound:focus-visible{outline:2px solid #dfbf7d;outline-offset:3px}
+/* Full-screen opening: the scene owns the screen; controls stay unobtrusive. */
+.hub-case-player{padding:0;background:#080e19;overflow:hidden;display:block}
+.hub-case-player-panel{width:100%;height:100dvh;margin:0}
+.hub-case-player .hub-gacha-frame{width:100%;height:100%;border:0;border-radius:0;background:#080e19}
+.hub-case-player-close,.hub-case-sound{top:max(18px,env(safe-area-inset-top));width:44px;height:44px;border-radius:50%;display:grid;place-items:center;padding:0;background:#0a111c66;border:1px solid #ffffff18;color:#d0d3da;backdrop-filter:blur(12px);transition:background .2s,color .2s}
+.hub-case-player-close{right:max(18px,env(safe-area-inset-right))}.hub-case-sound{left:max(18px,env(safe-area-inset-left))}
+.hub-case-player-close:hover,.hub-case-sound:hover{background:#1d263dcc;color:#fff}
+.hub-case-loading{top:50%;left:0;right:0;bottom:auto;transform:translateY(-50%);margin:0;font-size:12px;letter-spacing:.06em;background:transparent;color:#9d9ba5}
+.hub-case-player .hub-gacha-error{position:absolute;top:45%;left:20px;right:20px;text-align:center}
