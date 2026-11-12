@@ -8,7 +8,9 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import modelBytes from './daily-chest.glb';
 const $=s=>document.querySelector(s);
-const embedded=new URLSearchParams(location.search).has('embed');
+const params=new URLSearchParams(location.search);
+const embedded=params.has('embed');
+const soloIndex=embedded&&/^[0-2]$/.test(params.get('case')??'')?Number(params.get('case')):null;
 document.documentElement.classList.toggle('embedded',embedded);
 const tellHub=type=>{if(embedded&&window.parent!==window)window.parent.postMessage({type},location.origin);};
 async function start(){
@@ -31,7 +33,7 @@ const boxes=variants.map((variant,i)=>{
  const nodes=Object.fromEntries(['front','back','left','right','lid','base','core'].map(n=>[n,object.getObjectByName(n)]));
  scene.add(object);return {object,parts:nodes,materials,glows,homes:new Map(Object.values(nodes).map(p=>[p,{position:p.position.clone(),rotation:p.rotation.clone()}]))};
 });
-let selected=1,chest=boxes[1].object,parts=boxes[1].parts,glowMaterials=boxes[1].glows;
+let selected=soloIndex??1,chest=boxes[selected].object,parts=boxes[selected].parts,glowMaterials=boxes[selected].glows;
 const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));const bloom=new UnrealBloomPass(new THREE.Vector2(800,600),.3,.35,1.6);composer.addPass(bloom);composer.addPass(new OutputPass());
 const reward=new THREE.Group();const rewardMat=new THREE.MeshStandardMaterial({color:0xffd05a,metalness:.8,roughness:.2,emissive:0xb75f03,emissiveIntensity:.2});
 const outline=new THREE.Shape();for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?.27:.6;const x=Math.cos(a)*r,y=Math.sin(a)*r;i?outline.lineTo(x,y):outline.moveTo(x,y);}outline.closePath();
@@ -40,9 +42,9 @@ const particleMat=new THREE.MeshBasicMaterial({color:0x88ffff,transparent:true,o
 const vectors=Array.from({length:64},(_,i)=>new THREE.Vector3(Math.cos(i*2.399)*(.8+i%5*.15),Math.sin(i*1.7)*1.1+.3,Math.sin(i*2.399)*(.8+i%5*.15)));const dummy=new THREE.Object3D();
 const fx={energy:0,burst:0};let timeline=null,state='idle',raf=0,drag=null,moved=false,disposed=false;
 function reset(){timeline?.kill();timeline=null;state='idle';
- boxes.forEach((b,i)=>{b.object.visible=true;b.object.position.set((i-1)*2.15,-.35,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(.6);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
- reward.visible=false;reward.scale.setScalar(0);fx.energy=fx.burst=0;particleMat.opacity=0;light.intensity=0;bloom.strength=.3;$('#open').hidden=true;$('#status').textContent='Нажми на один из трёх боксов';$('#result').hidden=true;$('#resume').hidden=true;$('#choices').hidden=false;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=false);$('h1').textContent='Выбери свой бокс';resize();}
-function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=Number.isInteger(index)?index:selected;if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
+ boxes.forEach((b,i)=>{b.object.visible=soloIndex===null||i===soloIndex;b.object.position.set(soloIndex===null?(i-1)*2.15:0,soloIndex===null?-.35:0,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(soloIndex===null?.6:1);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
+ reward.visible=false;reward.scale.setScalar(0);fx.energy=fx.burst=0;particleMat.opacity=0;light.intensity=0;bloom.strength=.3;$('#open').hidden=true;$('#status').textContent='Нажми на один из трёх боксов';$('#result').hidden=true;$('#resume').hidden=true;$('#choices').hidden=false;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=false);$('h1').textContent='Выбери свой бокс';if(soloIndex!==null){$('#choices').hidden=true;$('#reset').hidden=true;$('h1').textContent=variants[soloIndex].name;$('.title p').textContent='Твой сундук готов к открытию';$('#status').textContent='Готовим открытие…';}resize();}
+function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=soloIndex??(Number.isInteger(index)?index:selected);if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
 const angle=chest.rotation.y,gentle=$('#gentle').checked,turn=gentle?0:Math.PI*2;
 timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=false;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='Демонстрационный приз';}});
 timeline.addLabel('windup',0)
@@ -77,6 +79,7 @@ timeline.addLabel('windup',0)
  .to(reward.scale,{x:1.2,y:1.2,z:1.2,duration:1.2,ease:'elastic.out(1,.5)'},5.9)
  .to(reward.scale,{x:1,y:1,z:1,duration:.45,ease:'sine.inOut'},7.1)
  .to(fx,{energy:.35,duration:1.2},5.9);
+if(soloIndex!==null){timeline.play();return;}
 const opening=timeline;timeline=gsap.timeline();
 boxes.forEach((b,i)=>{if(i!==selected){b.materials.forEach(m=>m.transparent=true);timeline.to([...b.materials],{opacity:0,duration:.65,ease:'power2.inOut'},0).to(b.object.scale,{x:.4,y:.4,z:.4,duration:.65,ease:'power2.inOut'},0).set(b.object,{visible:false},.7);}});
 timeline.to(chest.position,{x:0,y:0,z:0,duration:1.05,ease:'power3.inOut'},0)
@@ -84,7 +87,7 @@ timeline.to(chest.position,{x:0,y:0,z:0,duration:1.05,ease:'power3.inOut'},0)
  .to(camera.position,{x:3.5,y:2.9,z:Math.max(7.4,5.6/camera.aspect),duration:1.05,ease:'power3.inOut'},0)
  .add(opening.play(),1.15);
 }
-function resize(){const w=host.clientWidth,h=host.clientHeight;camera.aspect=w/h;if(state==='idle')camera.position.set(0,3,Math.max(9,9/camera.aspect));camera.lookAt(0,.35,0);camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h);}
+function resize(){const w=host.clientWidth,h=host.clientHeight;camera.aspect=w/h;if(state==='idle'){if(soloIndex!==null)camera.position.set(3.5,2.9,Math.max(7.4,5.6/camera.aspect));else camera.position.set(0,3,Math.max(9,9/camera.aspect));}camera.lookAt(0,.35,0);camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h);}
 const observer=new ResizeObserver(resize);observer.observe(host);resize();
 function render(time){if(disposed)return;raf=requestAnimationFrame(render);if(document.hidden)return;
  const t=time*.001;light.intensity=fx.energy*3;glowMaterials.forEach(m=>m.emissiveIntensity=1.5+fx.energy*3);
@@ -98,7 +101,7 @@ window.addEventListener('message',e=>{if(!embedded||e.source!==window.parent||e.
 $('#gentle').checked=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 renderer.domElement.addEventListener('pointerdown',e=>{if(state!=='idle')return;drag={x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
-renderer.domElement.addEventListener('pointerup',e=>{if(drag&&state==='idle'&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<12){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(boxes.map(b=>b.object),true)[0];if(hit){const i=boxes.findIndex(b=>{let p=hit.object;while(p){if(p===b.object)return true;p=p.parent;}return false;});if(i>=0)open(i);}}drag=null;});renderer.domElement.addEventListener('pointercancel',()=>drag=null);
+renderer.domElement.addEventListener('pointerup',e=>{if(drag&&state==='idle'&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<12){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(boxes.filter(b=>b.object.visible).map(b=>b.object),true)[0];if(hit){const i=boxes.findIndex(b=>{let p=hit.object;while(p){if(p===b.object)return true;p=p.parent;}return false;});if(i>=0)open(i);}}drag=null;});renderer.domElement.addEventListener('pointercancel',()=>drag=null);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&timeline?.isActive()){timeline.pause();$('#resume').hidden=false;}});$('#resume').onclick=()=>{timeline?.resume();$('#resume').hidden=true;};
 $('#download').onclick=()=>{const blob=new Blob([modelBytes],{type:'model/gltf-binary'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='daily-chest.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();timeline?.pause();$('#status').textContent='Графический контекст потерян. Обнови страницу.';$('#open').disabled=true;tellHub('gacha-error');});
