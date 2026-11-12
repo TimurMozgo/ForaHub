@@ -24,7 +24,21 @@ scene.add(new THREE.HemisphereLight(0xc1f4ff,0x14213b,1.3));
 const key=new THREE.DirectionalLight(0xe8f5ff,3.4);key.position.set(3,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-5;key.shadow.camera.right=5;key.shadow.camera.top=5;key.shadow.camera.bottom=-5;key.shadow.normalBias=.025;scene.add(key);
 const rim=new THREE.DirectionalLight(0x8bd7e5,1.8);rim.position.set(-4,2,-3);scene.add(rim);
 const warm=new THREE.DirectionalLight(0xb2baff,1.1);warm.position.set(4,1,-4);scene.add(warm);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(25,96),new THREE.MeshStandardMaterial({color:0x0b1422,roughness:.32,metalness:.3}));floor.rotation.x=-Math.PI/2;floor.position.y=-.87;floor.receiveShadow=true;scene.add(floor);
+// A horizon-free backdrop replaces the floor; model lighting stays unchanged.
+const backdropTextures=new Map();
+function setBackdrop(index){
+ if(!backdropTextures.has(index)){
+  const rgb=[[50,188,255],[189,85,255],[255,183,53]][index]??[50,188,255];
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#05070d';ctx.fillRect(0,0,1024,1024);
+  const glow=(x,y,r,alpha)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba('+rgb.join(',')+','+alpha+')');g.addColorStop(.4,'rgba('+rgb.join(',')+','+alpha*.4+')');g.addColorStop(1,'rgba('+rgb.join(',')+',0)');ctx.fillStyle=g;ctx.fillRect(0,0,1024,1024);};
+  glow(512,490,510,.24);glow(430,360,350,.09);glow(650,610,420,.07);
+  const vignette=ctx.createRadialGradient(512,480,230,512,512,720);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,0,0,.7)');ctx.fillStyle=vignette;ctx.fillRect(0,0,1024,1024);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;backdropTextures.set(index,texture);
+ }
+ scene.background=backdropTextures.get(index);
+}
+setBackdrop(soloIndex??1);
 const light=new THREE.PointLight(0x22edff,0,6,2);light.position.set(0,.5,0);scene.add(light);
 const loaded=await new GLTFLoader().parseAsync(modelBytes.buffer,'');
 const variants=[{name:'Искра',color:0x32bcff},{name:'Импульс',color:0xbd55ff},{name:'Легенда',color:0xffb735}];
@@ -65,7 +79,7 @@ function reset(){tellHub('gacha-audio',{cue:'stop'});timeline?.kill();timeline=n
  boxes.forEach((b,i)=>{b.object.visible=soloIndex===null||i===soloIndex;b.object.position.set(soloIndex===null?(i-1)*2.15:0,soloIndex===null?-.35:0,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(soloIndex===null?.6:1);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
  reward.visible=false;reward.scale.setScalar(0);fx.energy=fx.burst=0;particleMat.opacity=0;light.intensity=0;bloom.strength=.3;$('#open').hidden=true;$('#status').textContent='Нажми на один из трёх боксов';$('#result').hidden=true;$('#resume').hidden=true;$('#choices').hidden=false;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=false);$('h1').textContent='Выбери свой бокс';if(soloIndex!==null){$('#choices').hidden=true;$('#reset').hidden=true;$('h1').textContent=variants[soloIndex].name;$('.title p').textContent='Твой сундук готов к открытию';$('#status').textContent='Готовим открытие…';}resize();}
 function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=soloIndex??(Number.isInteger(index)?index:selected);if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
-preparePrize(selected);
+setBackdrop(selected);preparePrize(selected);
 const angle=chest.rotation.y,gentle=$('#gentle').checked,turn=gentle?0:Math.PI*2;
 timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=false;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='';}});
 timeline.addLabel('windup',0)
@@ -127,7 +141,7 @@ renderer.domElement.addEventListener('pointerup',e=>{if(drag&&state==='idle'&&Ma
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&timeline?.isActive()){timeline.pause();tellHub('gacha-audio',{cue:'pause'});$('#resume').hidden=false;}});$('#resume').onclick=()=>{tellHub('gacha-audio',{cue:'resume'});timeline?.resume();$('#resume').hidden=true;};
 $('#download').onclick=()=>{const blob=new Blob([modelBytes],{type:'model/gltf-binary'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='daily-chest.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();tellHub('gacha-audio',{cue:'stop'});timeline?.pause();$('#status').textContent='Графический контекст потерян. Обнови страницу.';$('#open').disabled=true;tellHub('gacha-error');});
-window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(raf);timeline?.kill();observer.disconnect();composer.dispose();prizeTextures.forEach(texture=>texture.dispose());auraTexture.dispose();env.dispose();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of [].concat(o.material))m.dispose();}});},{once:true});
+window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(raf);timeline?.kill();observer.disconnect();composer.dispose();backdropTextures.forEach(texture=>texture.dispose());prizeTextures.forEach(texture=>texture.dispose());auraTexture.dispose();env.dispose();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of [].concat(o.material))m.dispose();}});},{once:true});
 reset();$('#download').disabled=false;render(0);tellHub('gacha-ready');window.chestDemo={scene,chest,open,reset,get timeline(){return timeline;}};
 }
 start().catch(e=>{$('#status').textContent='Не удалось запустить 3D: '+e.message;tellHub('gacha-error');console.error(e);});
