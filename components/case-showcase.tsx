@@ -7,7 +7,7 @@ import { getCasePrizes, GIFTS, type Prize, type CaseId } from "./case-prizes";
 import { ArrowRight, Gift, Gem, Sparkles, Star, Volume2, VolumeX, X } from "lucide-react";
 
 type Case = { id: CaseId; title: string; price: number; image: string; tone: string; subtitle: string };
-type Phase = "opening" | "waiting" | "charging" | "holding" | "burst" | "revealed";
+type Phase = "details" | "opening" | "waiting" | "charging" | "holding" | "burst" | "revealed";
 
 const cases: Case[] = [
   { id: "free", title: "Ежедневный", price: 0, image: "/cases/case-free.png", tone: "cyan", subtitle: "Твоё первое открытие" },
@@ -57,7 +57,6 @@ export function CaseShowcase() {
   const [closing, setClosing] = useState(false);
   const [settled, setSettled] = useState(false);
   const [energyStep, setEnergyStep] = useState(0);
-  const [catalogCase, setCatalogCase] = useState<CaseId>("free");
 
   useEffect(() => {
     const background = new Image();
@@ -145,6 +144,12 @@ export function CaseShowcase() {
     timers.current = [];
   }
 
+  function inspectCase(c: Case) {
+    clearSequence();
+    setSelected(c); setPhase("details"); setReady(false); setClosing(false);
+    if (!dialog.current?.open) dialog.current?.showModal();
+  }
+
   async function start(c: Case) {
     clearSequence();
     const token = sequence.current;
@@ -209,20 +214,25 @@ export function CaseShowcase() {
 
   return <>
     <div className="case-intro"><span className="eyebrow">КОЛЛЕКЦИЯ КЕЙСОВ</span><h1>Испытай удачу</h1><p>Четыре кейса. Один момент, который хочется пережить ещё раз.</p></div>
-    <div className="case-grid">{cases.map(c => <button key={c.id} className={`case-card ${c.tone}`} onClick={() => start(c)} aria-label={`Посмотреть открытие: ${c.title}`}>
+    <div className="case-grid">{cases.map(c => <button key={c.id} className={`case-card ${c.tone}`} onClick={() => inspectCase(c)} aria-label={`Содержимое кейса: ${c.title}`}>
       <span className="case-card-art" style={{ backgroundImage: `url(${c.image})` }}><span className="case-card-shine" /></span>
       <span className="case-card-copy"><span className="case-card-kicker">{c.price === 0 ? "ЕЖЕДНЕВНЫЙ" : "КЕЙС GAME HUB"}</span><strong>{c.title}</strong><small>{c.subtitle}</small><span className="case-card-bottom"><span>{c.price === 0 ? "Бесплатно" : <><Star size={14} fill="currentColor" /> {c.price} Stars</>}</span><span className="case-card-arrow"><ArrowRight size={16} /></span></span></span>
     </button>)}</div>
-    <section className={`case-prize-collection ${cases.find(c=>c.id===catalogCase)?.tone}`} aria-label="Содержимое кейсов">
-      <div className="case-collection-heading"><div><span className="eyebrow">КОЛЛЕКЦИЯ ПРИЗОВ</span><h2>Что внутри кейса</h2></div><span>{getCasePrizes(catalogCase).length} подарков + звёзды</span></div>
-      <div className="case-collection-tabs" aria-label="Выбрать коллекцию">{cases.map(c=><button key={c.id} type="button" aria-pressed={catalogCase===c.id} onClick={()=>setCatalogCase(c.id)}>{c.title}</button>)}</div>
-      <div className="case-top-prize"><img src={GIFTS.redo.image} alt="Redo — собака в капюшоне" width={120} height={120} loading="lazy"/><div><span className="eyebrow">ГЛАВНЫЙ ПРИЗ</span><h3>Redo</h3><p>Resistance Dog · в каждом кейсе</p></div><Gem size={24}/></div>
-      <div className="case-prize-grid">{getCasePrizes(catalogCase).filter(p=>!p.topPrize).map(p=><article className={`case-prize-tile ${p.kind}`} key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy" decoding="async"/><span>{p.kind==="gem"?"КОЛЛЕКЦИОННЫЙ":"ПОДАРОК"}</span><h3>{p.label}</h3></article>)}</div>
-      <p className="case-collection-note">Демонстрационная коллекция. Изображения представляют коллекции; конкретные NFT и реальные шансы будут определены при подключении выдачи.</p>
-    </section>
     <div className="case-preview-note"><Sparkles size={18} /><p><strong>Пока это просмотр анимации.</strong> Оплата, начисление звёзд и выдача подарков появятся после подключения бота и призового фонда.</p></div>
-    <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${closing ? "closing" : ""}`} aria-label={`Открытие кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
+    <dialog ref={dialog} className={`case-theater ${selected?.tone || "cyan"} ${phase === "details" ? "case-details-mode" : ""} ${closing ? "closing" : ""}`} aria-label={`${phase === "details" ? "Содержимое" : "Открытие"} кейса ${selected?.title || ""}`} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
+      {phase === "details" && selected ? <div className="case-details-inner">
+        <header className="case-details-header"><div><span className="eyebrow">СОДЕРЖИМОЕ КЕЙСА</span><h2>{selected.title}</h2></div><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20}/></button></header>
+        <div className="case-details-scroll">
+          <div className="case-details-summary"><img src={selected.image} alt="" width={92} height={92}/><div><p>{selected.subtitle}</p><strong>{selected.price===0?"Бесплатный кейс":`${selected.price} Stars`}</strong><small>{getCasePrizes(selected.id).length} подарков + звёзды</small></div></div>
+          <div className="case-top-prize"><img src={GIFTS.redo.image} alt="Redo — собака в капюшоне" width={120} height={120}/><div><span className="eyebrow">ГЛАВНЫЙ ПРИЗ</span><h3>Redo</h3><p>Resistance Dog</p></div><Gem size={24}/></div>
+          <h3 className="case-details-grid-title">Что может выпасть</h3>
+          <div className="case-prize-grid">{getCasePrizes(selected.id).filter(p=>!p.topPrize).map(p=><article className={`case-prize-tile ${p.kind}`} key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy" decoding="async"/><span>{p.kind==="gem"?"КОЛЛЕКЦИОННЫЙ":"ПОДАРОК"}</span><h3>{p.label}</h3></article>)}
+            <article className="case-prize-tile"><Star className="case-details-stars" size={60} fill="currentColor"/><span>ЗВЁЗДЫ</span><h3>{selected.id==="free"?"1 или 2 звезды":"1, 2 или 5 звёзд"}</h3></article>
+          </div>
+          <p className="case-collection-note">Демонстрационная коллекция. Изображения представляют коллекции; конкретные NFT и реальные шансы будут определены при подключении выдачи.</p>
+        </div>
+        <footer className="case-details-footer"><button className="case-details-open" disabled={closing} onClick={()=>start(selected)}>Открыть кейс <ArrowRight size={19}/></button><span>Демо · без списания звёзд и выдачи призов</span></footer>
+      </div> : <div className={`case-theater-inner cinematic-chamber phase-${ready ? phase : "loading"}`}>
       {selected && <>{ready && <div className="case-chamber-backdrop" aria-hidden="true"/>}<div className="case-chamber-mist" aria-hidden="true"/><div className="case-chamber-light" aria-hidden="true"/><CaseEnergy key={selected.id} phase={ready ? phase : "loading"} tone={selected.tone}/></>}
       {(phase === "burst" || phase === "revealed") && <div className="case-finale-flash" aria-hidden="true"/>}
       <div className="case-theater-top"><span className="case-theater-badge"><Sparkles size={14} /> ДЕМО ОТКРЫТИЯ</span><div><button className="case-icon-button" aria-label={soundEnabled ? "Выключить звук" : "Включить звук"} onClick={() => { audioOn.current = !soundEnabled; if(master.current) master.current.gain.value = !soundEnabled ? 1 : 0; setSoundEnabled(!soundEnabled); }}>{soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}</button><button className="case-icon-button" aria-label="Закрыть" onClick={close}><X size={20} /></button></div></div>
@@ -243,7 +253,7 @@ export function CaseShowcase() {
           <div className="case-result-copy"><span className="eyebrow">ТВОЙ РЕЗУЛЬТАТ</span><h3>{prize.label}</h3><p>Это демонстрация анимации. Приз не начислен.</p><button className="case-repeat" disabled={!settled} onClick={() => start(selected)}>Смотреть ещё <ArrowRight size={16}/></button></div>
         </div>}
       </>}
-      </div>
+      </div>}
     </dialog>
   </>;
 }
