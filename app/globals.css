@@ -289,3 +289,8 @@
 .hub-case-player-close:hover,.hub-case-sound:hover{background:#1d263dcc;color:#fff}
 .hub-case-loading{top:50%;left:0;right:0;bottom:auto;transform:translateY(-50%);margin:0;font-size:12px;letter-spacing:.06em;background:transparent;color:#9d9ba5}
 .hub-case-player .hub-gacha-error{position:absolute;top:45%;left:20px;right:20px;text-align:center}
+/* Rendered directly under body, outside the animated hub stacking context. */
+body:has(>.hub-case-player) .bottom-nav,body:has(>.hub-case-player) .sidebar,body:has(>.hub-case-player) .topbar{visibility:hidden!important;pointer-events:none!important}
+body>.hub-case-player{position:fixed;inset:0;z-index:2147483000;width:100vw;height:100dvh;padding:0;animation:none}
+body>.hub-case-player .hub-case-player-close,body>.hub-case-player .hub-case-sound{background:transparent;border:0;backdrop-filter:none;color:#ffffff70}
+body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-case-sound:hover{color:#fff;background:#ffffff0c}
