@@ -279,3 +279,4 @@
 @keyframes hub-player-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media(max-width:600px){.hub-case-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.hub-case-card{border-radius:17px}.hub-case-card-info{padding:13px 12px 7px}.hub-case-card-info strong{font-size:16px}.hub-case-card-caption{padding:0 12px 14px;font-size:11px}.hub-case-player{padding:6px}.hub-case-card-price{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.hub-case-card,.hub-case-player{transition:none;animation:none}}
+.hub-case-sound{position:absolute;left:15px;top:15px;z-index:2;border:1px solid #ffffff25;border-radius:20px;padding:9px 13px;background:#101826;color:#d5bd87;font-size:11px;cursor:pointer}.hub-case-sound:focus-visible{outline:2px solid #dfbf7d;outline-offset:3px}

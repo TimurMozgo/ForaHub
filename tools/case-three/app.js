@@ -12,7 +12,7 @@ const params=new URLSearchParams(location.search);
 const embedded=params.has('embed');
 const soloIndex=embedded&&/^[0-2]$/.test(params.get('case')??'')?Number(params.get('case')):null;
 document.documentElement.classList.toggle('embedded',embedded);
-const tellHub=type=>{if(embedded&&window.parent!==window)window.parent.postMessage({type},location.origin);};
+const tellHub=(type,detail={})=>{if(embedded&&window.parent!==window)window.parent.postMessage({type,...detail},location.origin);};
 async function start(){
 const host=$('#viewport'),scene=new THREE.Scene();scene.background=new THREE.Color('#080e19');scene.fog=new THREE.Fog('#080e19',23,48);
 const camera=new THREE.PerspectiveCamera(38,1,.1,60);camera.position.set(4,3.1,7.1);camera.lookAt(0,.35,0);
@@ -41,13 +41,14 @@ const rewardGeo=new THREE.ExtrudeGeometry(outline,{depth:.15,bevelEnabled:true,b
 const particleMat=new THREE.MeshBasicMaterial({color:0x88ffff,transparent:true,opacity:0,depthWrite:false});const particles=new THREE.InstancedMesh(new THREE.SphereGeometry(.018,5,4),particleMat,64);particles.frustumCulled=false;scene.add(particles);
 const vectors=Array.from({length:64},(_,i)=>new THREE.Vector3(Math.cos(i*2.399)*(.8+i%5*.15),Math.sin(i*1.7)*1.1+.3,Math.sin(i*2.399)*(.8+i%5*.15)));const dummy=new THREE.Object3D();
 const fx={energy:0,burst:0};let timeline=null,state='idle',raf=0,drag=null,moved=false,disposed=false;
-function reset(){timeline?.kill();timeline=null;state='idle';
+function reset(){tellHub('gacha-audio',{cue:'stop'});timeline?.kill();timeline=null;state='idle';
  boxes.forEach((b,i)=>{b.object.visible=soloIndex===null||i===soloIndex;b.object.position.set(soloIndex===null?(i-1)*2.15:0,soloIndex===null?-.35:0,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(soloIndex===null?.6:1);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
  reward.visible=false;reward.scale.setScalar(0);fx.energy=fx.burst=0;particleMat.opacity=0;light.intensity=0;bloom.strength=.3;$('#open').hidden=true;$('#status').textContent='Нажми на один из трёх боксов';$('#result').hidden=true;$('#resume').hidden=true;$('#choices').hidden=false;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=false);$('h1').textContent='Выбери свой бокс';if(soloIndex!==null){$('#choices').hidden=true;$('#reset').hidden=true;$('h1').textContent=variants[soloIndex].name;$('.title p').textContent='Твой сундук готов к открытию';$('#status').textContent='Готовим открытие…';}resize();}
 function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=soloIndex??(Number.isInteger(index)?index:selected);if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
 const angle=chest.rotation.y,gentle=$('#gentle').checked,turn=gentle?0:Math.PI*2;
-timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=false;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='Демонстрационный приз';}});
+timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=false;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='';}});
 timeline.addLabel('windup',0)
+ .call(()=>tellHub('gacha-audio',{cue:'charge',index:selected}),[],0)
  .to(chest.rotation,{y:angle+turn*1.5,x:gentle?0:.12,duration:2,ease:'power2.in'},0)
  .to(chest.position,{y:.3,duration:2,ease:'power2.inOut'},0)
  .to(fx,{energy:1,duration:2,ease:'power2.in'},0)
@@ -58,7 +59,7 @@ timeline.addLabel('windup',0)
  .to(chest.rotation,{y:angle+turn*4,x:0,duration:1.1,ease:'power4.out'},2.8)
  .to(chest.scale,{x:1,y:1,z:1,duration:1.1,ease:'power4.out'},2.8)
  .addLabel('burst',4.15)
- .call(()=>$('#status').textContent='Сундук раскрывается…',[],4.15)
+ .call(()=>{$('#status').textContent='Сундук раскрывается…';tellHub('gacha-audio',{cue:'burst',index:selected});},[],4.15)
  .to(parts.lid.position,{y:2.5,z:-.8,duration:1,ease:'power3.out'},4.15)
  .to(parts.lid.rotation,{x:-.8,z:-.25,duration:1,ease:'power3.out'},4.15)
  .to(parts.front.position,{z:2.2,y:-.35,duration:1,ease:'power3.out'},4.25)
@@ -75,7 +76,7 @@ timeline.addLabel('windup',0)
  .to(bloom,{strength:.4,duration:.9},4.35)
  .addLabel('prize',5.65)
  .to(chest.scale,{x:0,y:0,z:0,duration:.6,ease:'power3.in'},5.65)
- .call(()=>{reward.visible=true;reward.position.set(0,.65,0);reward.quaternion.copy(camera.quaternion);$('#result').hidden=false;},[],5.9)
+ .call(()=>{tellHub('gacha-audio',{cue:'prize',index:selected});reward.visible=true;reward.position.set(0,.65,0);reward.quaternion.copy(camera.quaternion);$('#result').hidden=false;},[],5.9)
  .to(reward.scale,{x:1.2,y:1.2,z:1.2,duration:1.2,ease:'elastic.out(1,.5)'},5.9)
  .to(reward.scale,{x:1,y:1,z:1,duration:.45,ease:'sine.inOut'},7.1)
  .to(fx,{energy:.35,duration:1.2},5.9);
@@ -102,9 +103,9 @@ $('#gentle').checked=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 renderer.domElement.addEventListener('pointerdown',e=>{if(state!=='idle')return;drag={x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
 renderer.domElement.addEventListener('pointerup',e=>{if(drag&&state==='idle'&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<12){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(boxes.filter(b=>b.object.visible).map(b=>b.object),true)[0];if(hit){const i=boxes.findIndex(b=>{let p=hit.object;while(p){if(p===b.object)return true;p=p.parent;}return false;});if(i>=0)open(i);}}drag=null;});renderer.domElement.addEventListener('pointercancel',()=>drag=null);
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&timeline?.isActive()){timeline.pause();$('#resume').hidden=false;}});$('#resume').onclick=()=>{timeline?.resume();$('#resume').hidden=true;};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&timeline?.isActive()){timeline.pause();tellHub('gacha-audio',{cue:'pause'});$('#resume').hidden=false;}});$('#resume').onclick=()=>{tellHub('gacha-audio',{cue:'resume'});timeline?.resume();$('#resume').hidden=true;};
 $('#download').onclick=()=>{const blob=new Blob([modelBytes],{type:'model/gltf-binary'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='daily-chest.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();timeline?.pause();$('#status').textContent='Графический контекст потерян. Обнови страницу.';$('#open').disabled=true;tellHub('gacha-error');});
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();tellHub('gacha-audio',{cue:'stop'});timeline?.pause();$('#status').textContent='Графический контекст потерян. Обнови страницу.';$('#open').disabled=true;tellHub('gacha-error');});
 window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(raf);timeline?.kill();observer.disconnect();composer.dispose();env.dispose();renderer.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of [].concat(o.material))m.dispose();}});},{once:true});
 reset();$('#download').disabled=false;render(0);tellHub('gacha-ready');window.chestDemo={scene,chest,open,reset,get timeline(){return timeline;}};
 }
