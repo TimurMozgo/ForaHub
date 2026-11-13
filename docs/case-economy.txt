@@ -9,13 +9,13 @@ Daily: 0 / 2 / 1.10; once per rolling 24 hours; probabilities 90% for 1 and 10% 
 50: 50 / 25 / 12.90 (25.80%).
 100: 100 / 50 / 27.45 (27.45%).
 Each active paid prize has an individual cost <= 50% of its nominal case price. This controls the maximum modeled liability per opening, not cash profit.
-Weights sum to 10000; selection is weighted, not uniform. The same table supplies active contents and animation. Inactive NFTs are separate, clearly marked upcoming and have no tickets. Ordinary gift costs are user-provided assumptions: 15, 25, 50 Stars; verify real procurement and delivery costs before launch.
+Weights sum to 10000; selection is weighted, not uniform. The same table supplies active contents and animation. Inactive NFTs and ordinary gifts are omitted from the live contents. The catalogue now renders ONLY the active opening table. Ordinary gift costs are user-provided assumptions: 15, 25, 50 Stars; verify real procurement and delivery costs before launch.
 
 Redo: user reports minimum purchase cost 46000 Stars. Excluded from current payouts. Other NFTs also excluded because procurement costs and funded stock have not been verified. With the current per-opening cap, a 46000-Star award requires a case priced >=92000 Stars; an alternate jackpot must have a separately funded, disclosed pool.
 
 Daily cases have no purchase revenue: 1000 daily openings imply 1100 Stars expected liability and 2000 maximum. No financial reserve has been supplied. Real daily issuance must remain disabled until a global funded campaign budget and stock are enforced atomically on the server. Per-account limits do not prevent multi-account abuse.
 
-Before real sales: verified Telegram successful_payment; server-only random draw; atomically debit only paid eligible funds and reserve a prize; idempotency by Telegram charge/order; inventory and withdrawal liabilities; returns/chargebacks and operating costs; pause sales if reserve or stock is insufficient instead of silently changing advertised odds. Do not count re-wagered bonus balances as fresh incoming revenue. Do not stack a 50% loyalty NFT on top of 50% regular payouts. No spend-based NFT bonus is enabled.
+Before real sales: verified Telegram successful_payment; server-only random draw; atomically debit only paid eligible funds and reserve a prize; idempotency by Telegram charge/order; inventory and withdrawal liabilities; returns/chargebacks and operating costs; pause sales if reserve or stock is insufficient instead of silently changing advertised odds. Do not count re-wagered bonus balances as fresh incoming revenue. Do not stack a 50% loyalty NFT on top of 50% regular payouts. A one-time loyalty entitlement is defined below; real issuance is not connected.
 
 Telegram references:
 https://core.telegram.org/bots/payments-stars
@@ -25,3 +25,9 @@ Stars buyer pricing and bot reward value are not interchangeable. These calculat
 Configuration: components/case-opening-prizes.ts
 Daily endpoint: app/api/cases/daily/route.ts
 Tests: tools/case-three/check-prizes.mjs and check-daily.mjs
+
+LOYALTY UPDATE
+One bonus per account after 2500 net paid Stars spent on cases. NFT actual procurement cost must be positive and <=500 Stars. Reward-funded spending, top-ups alone, pending/cancelled purchases and refunded paid spend do not qualify. Duplicate order IDs cannot add progress twice. The bonus is separate from case prize tables. No award is selected at random from the case contents.
+lib/case-loyalty.ts implements accounting, entitlement and one-time award validation; check-loyalty.mjs verifies boundaries and replay protection. /api/cases/loyalty is READ ONLY and authenticated. It reads the dedicated case-loyalty:sites:USER accounting namespace, never a game save or browser balance. No public endpoint can upload purchases or claim an unfunded NFT.
+CURRENT LIMIT: Telegram payment settlement, wallet ledger, globally owned NFT stock, inventory transfers and automatic issuance are absent. Thus current animations do not advance progress; the UI explicitly states this. The accounting functions are prepared but not called by a real payment provider.
+INTEGRATION REQUIRED: verified settlement writes the paid/reward split and this loyalty account atomically with the wallet debit. Use real order IDs, apply refunds to original orders, reserve a globally unique owned NFT <=500 and write inventory plus bonus atomically. Never call recordSettledOrder from client-supplied purchase data. After-award refunds require a chargeback liability policy; they must never permit a second bonus. Provider readiness is false in the GET route until those services exist.

@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';import {build} from 'esbuild';
+const compiled=await build({entryPoints:[new URL('../../lib/case-loyalty.ts',import.meta.url).pathname.replace(/^\/(.:)/,'$1')],bundle:true,write:false,format:'esm'});
+const {emptyLoyaltyAccount,recordSettledOrder,loyaltyProgress,awardLoyaltyNFT}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].contents).toString('base64'));
+const order=(id,paid,reward=0)=>({orderId:id,casePrice:paid+reward,paidStars:paid,rewardStars:reward,refundedPaidStars:0,status:'settled'});
+let a=emptyLoyaltyAccount();assert.equal(loyaltyProgress(a).paidSpent,0);
+a=recordSettledOrder(a,order('free',0,5000));assert.equal(loyaltyProgress(a).paidSpent,0);
+a=recordSettledOrder(a,order('mixed',2499,501));assert.equal(loyaltyProgress(a).status,'collecting');assert.equal(loyaltyProgress(a).remaining,1);
+assert.strictEqual(recordSettledOrder(a,order('mixed',2499,501)),a);assert.throws(()=>recordSettledOrder(a,order('mixed',2500)));
+const nft={assetId:'owned-asset',label:'NFT',kind:'gem',costStars:500};assert.throws(()=>awardLoyaltyNFT(a,nft));
+a=recordSettledOrder(a,order('last',1));assert.equal(loyaltyProgress(a).status,'earned');
+assert.throws(()=>awardLoyaltyNFT(a,{...nft,costStars:501}));assert.throws(()=>awardLoyaltyNFT(a,{...nft,costStars:0}));
+const refunded={...a,orders:a.orders.map(o=>o.orderId==='last'?{...o,refundedPaidStars:1}:o)};assert.equal(loyaltyProgress(refunded).status,'collecting');
+a=awardLoyaltyNFT(a,nft);assert.equal(loyaltyProgress(a).status,'awarded');assert.strictEqual(awardLoyaltyNFT(a,nft),a);assert.throws(()=>awardLoyaltyNFT(a,{...nft,assetId:'second'}));
+assert.throws(()=>recordSettledOrder(emptyLoyaltyAccount(),order('negative',-1)));assert.throws(()=>recordSettledOrder(emptyLoyaltyAccount(),{...order('pending',2500),status:'pending'}));
+console.log('PASS: paid-only spend, exact threshold, duplicate/conflicting orders, refunds, NFT cap and one-time award.');
+
+let user={userId:'first'},saved=null,lastKey='';globalThis.__loyaltyUser=()=>user;
+globalThis.__loyaltyDb={prepare:()=>({bind:key=>{lastKey=key;return {first:async()=>saved};}})};
+const api=await build({entryPoints:[new URL('../../app/api/cases/loyalty/route.ts',import.meta.url).pathname.replace(/^\/(.:)/,'$1')],bundle:true,write:false,format:'esm',platform:'node',plugins:[{name:'bindings',setup(b){b.onResolve({filter:/^(cloudflare:workers)$|chatgpt-auth$/},args=>({path:args.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},args=>({contents:args.path==='cloudflare:workers'?'export const env={DB:globalThis.__loyaltyDb};':'export const getChatGPTUser=async()=>globalThis.__loyaltyUser();',loader:'js'}));}}]});
+const {GET}=await import('data:text/javascript;base64,'+Buffer.from(api.outputFiles[0].contents).toString('base64'));
+assert.equal((await (await GET()).json()).paidSpent,0);assert.equal(lastKey,'case-loyalty:sites:first');
+saved={snapshot_json:JSON.stringify(a)};assert.equal((await (await GET()).json()).status,'awarded');
+user={userId:'second'};await GET();assert.equal(lastKey,'case-loyalty:sites:second');
+saved={snapshot_json:'broken'};assert.equal((await GET()).status,503);user=null;assert.equal((await GET()).status,401);
+console.log('PASS: authenticated per-account progress, missing account, corrupt state and no public write endpoint.');
