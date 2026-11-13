@@ -2,13 +2,14 @@
 import {useEffect,useRef,useState} from "react";
 import {ArrowRight,Star,X,Volume2,VolumeX} from "lucide-react";
 import {GIFTS} from "./case-prizes";
+import {getCaseNFTCollection} from "./case-nft-collections";
 import {CASE_CONFIG,getOpeningPrizes} from "./case-opening-prizes";
 import {createPortal} from "react-dom";
 import {CaseAudio} from "./case-audio";
 
 type DailyReply={nextAt:number;serverNow:number;prize?:{id:string};error?:string};
 const boxes=CASE_CONFIG;
-const plannedNFT=Object.values(GIFTS).filter(p=>p.kind==='gem');
+
 export function CaseShowcase(){
  const frame=useRef<HTMLIFrameElement>(null),dialog=useRef<HTMLDialogElement>(null);
  const audio=useRef<CaseAudio|null>(null);
@@ -49,6 +50,7 @@ export function CaseShowcase(){
  }
 
  const box=selected===null?null:boxes[selected];
+ const plannedNFT=box?getCaseNFTCollection(box.id):[];
  const pool=selected===null?[]:getOpeningPrizes(selected),availableGifts=pool.filter(p=>p.kind!=='star'),starChance=pool.filter(p=>p.kind==='star').reduce((n,p)=>n+p.weight/100,0);
  return <section className="hub-gacha">
   <div className="case-intro"><span className="eyebrow">КОЛЛЕКЦИЯ КЕЙСОВ</span><h1>Испытай удачу</h1><p>Выбери свой бокс и пробуди его энергию.</p></div>
@@ -59,7 +61,7 @@ export function CaseShowcase(){
    {box&&<div className="case-details-inner"><header className="case-details-header"><div><span className="eyebrow">СОДЕРЖИМОЕ КЕЙСА</span><h2>{box.name}</h2></div><button className="case-icon-button" onClick={close} aria-label="Закрыть"><X size={20}/></button></header>
     <div className="case-details-scroll"><p className="hub-gacha-price">{box.price===0?'Бесплатно · раз в 24 часа':box.price+' Stars'}</p>
     <h3 className="case-list-title">Коллекционные подарки</h3><p className="case-list-note">Скоро — пока не участвуют в открытии</p>
-    <div className="case-prize-grid">{plannedNFT.map(p=><article className="case-prize-tile gem case-prize-future" key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy"/><span>СКОРО</span><h3>{p.label}</h3></article>)}</div>
+    <div className="case-prize-grid">{plannedNFT.map(p=><article className={`case-prize-tile gem case-prize-future ${p.topPrize?"case-nft-top":""}`} key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy"/><span>{p.topPrize?"ГЛАВНЫЙ NFT · СКОРО":"СКОРО"}</span><h3>{p.label}</h3></article>)}</div>
     <h3 className="case-list-title">Обычные подарки</h3>
     {availableGifts.length===0&&<p className="case-list-note">Пока недоступны в этом кейсе</p>}
     <div className="case-prize-grid">{availableGifts.length?availableGifts.map(p=><article className="case-prize-tile gift" key={p.id}><img src={p.image} alt={p.label} width={120} height={120} loading="lazy"/><span>ПОДАРОК</span><h3>{p.label}</h3><small className="case-prize-chance">{p.weight/100}%</small></article>):['heart','bear','box','rose'].map(id=><article className="case-prize-tile case-prize-future" key={id}><img src={GIFTS[id].image} alt={GIFTS[id].label} width={120} height={120} loading="lazy"/><span>НЕДОСТУПЕН</span><h3>{GIFTS[id].label}</h3></article>)}</div>

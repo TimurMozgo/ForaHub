@@ -310,3 +310,5 @@ body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-ca
 .hub-case-card{border-color:color-mix(in srgb,var(--case-accent) 24%,transparent)}
 .hub-case-card:hover{border-color:var(--case-accent);box-shadow:0 14px 35px color-mix(in srgb,var(--case-accent) 12%,transparent)}
 .hub-case-card-price{color:var(--case-accent)}
+
+.case-prize-tile.case-nft-top{grid-column:1/-1;opacity:1;border-color:color-mix(in srgb,var(--case-accent) 55%,transparent);background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--case-accent) 18%,transparent),transparent 70%),#191e25}.case-prize-tile.case-nft-top img{width:150px;height:150px}.case-prize-tile.case-nft-top h3{font-size:16px}.case-prize-tile.case-nft-top>span{font-size:9px}
