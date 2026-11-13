@@ -17,7 +17,7 @@ export async function POST(request:Request){
   const row=await read(id),previous=parse(row),now=Date.now();
   if(previous?.requestId===requestId)return reply({prize:previous.prize,nextAt:dailyAvailableAt(previous.openedAt),serverNow:now});
   if(previous&&now<dailyAvailableAt(previous.openedAt))return reply({error:'cooldown',nextAt:dailyAvailableAt(previous.openedAt),serverNow:now},409);
-  const prize=pickOpeningPrize(0,()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296),state:State={openedAt:now,requestId,prize};
+  const prize=pickOpeningPrize(0),state:State={openedAt:now,requestId,prize};
   const result=await env.DB!.prepare(`INSERT INTO turret_saves(player_id,snapshot_json,previous_json,revision,mutation_id,updated_at) VALUES(?,?,NULL,1,?,?) ON CONFLICT(player_id) DO UPDATE SET snapshot_json=excluded.snapshot_json,revision=turret_saves.revision+1,mutation_id=excluded.mutation_id,updated_at=excluded.updated_at WHERE turret_saves.revision=?`).bind(id,JSON.stringify(state),requestId,new Date(now).toISOString(),row?.revision??0).run();
   if(result.meta.changes)return reply({prize,nextAt:dailyAvailableAt(now),serverNow:now});
  }return reply({error:'retry'},409);}catch{return reply({error:'unavailable'},503);}
