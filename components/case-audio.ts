@@ -40,7 +40,7 @@ export class CaseAudio {
   if(cue==='pause'){void this.context?.suspend().catch(()=>{});return;}
   if(cue==='resume'){void this.context?.resume().catch(()=>{});return;}
   const c=this.context;if(!c||c.state!=='running')return;
-  const now=c.currentTime+.015,pitch=[1,.89,.75][index]??1;
+  const now=c.currentTime+.015,pitch=[1,.89,.75,1,.89][index]??1;
   if(cue==='charge'){
    this.stop();
    // Warm motor harmonics rise in both pitch and loudness, then release before burst.

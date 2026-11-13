@@ -1,9 +1,9 @@
 import {GIFTS,type Prize} from './case-prizes';
 export const CASE_CONFIG=[
- {id:'daily',name:'Ежедневный',price:0,tone:'blue',art:'spark',palette:0},
+ {id:'daily',name:'Ежедневный',price:0,tone:'silver',art:'spark',palette:3},
  {id:'starter',name:'Искра',price:10,tone:'blue',art:'spark',palette:0},
  {id:'pulse',name:'Импульс',price:25,tone:'violet',art:'pulse',palette:1},
- {id:'glow',name:'Сияние',price:50,tone:'gold',art:'legend',palette:2},
+ {id:'glow',name:'Сияние',price:50,tone:'emerald',art:'spark',palette:4},
  {id:'legend',name:'Легенда',price:100,tone:'gold',art:'legend',palette:2},
 ] as const;
 export type OpeningPrize=Prize&{id:string;weight:number;costStars:number};

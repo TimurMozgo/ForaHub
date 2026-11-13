@@ -30,7 +30,7 @@ const warm=new THREE.DirectionalLight(0xb2baff,1.1);warm.position.set(4,1,-4);sc
 const backdropTextures=new Map();
 function setBackdrop(index){
  if(!backdropTextures.has(index)){
-  const rgb=[[50,188,255],[189,85,255],[255,183,53]][index]??[50,188,255];
+  const rgb=[[50,188,255],[189,85,255],[255,183,53],[220,234,247],[53,235,152]][index]??[50,188,255];
   const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;
   const ctx=canvas.getContext('2d');ctx.fillStyle='#05070d';ctx.fillRect(0,0,1024,1024);
   const glow=(x,y,r,alpha)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba('+rgb.join(',')+','+alpha+')');g.addColorStop(.4,'rgba('+rgb.join(',')+','+alpha*.4+')');g.addColorStop(1,'rgba('+rgb.join(',')+',0)');ctx.fillStyle=g;ctx.fillRect(0,0,1024,1024);};
@@ -43,10 +43,10 @@ function setBackdrop(index){
 setBackdrop(soloIndex??1);
 const light=new THREE.PointLight(0x22edff,0,6,2);light.position.set(0,.5,0);scene.add(light);
 const loaded=await new GLTFLoader().parseAsync(modelBytes.buffer,'');
-const variants=[{name:'Искра',color:0x32bcff},{name:'Импульс',color:0xbd55ff},{name:'Легенда',color:0xffb735}];
+const variants=[{name:'Искра',color:0x32bcff},{name:'Импульс',color:0xbd55ff},{name:'Легенда',color:0xffb735},{name:'Ежедневный',color:0xdceaf7},{name:'Сияние',color:0x35eb98}];
 const boxes=variants.map((variant,i)=>{
  const object=loaded.scene.getObjectByName('DailyChest').clone(true),materials=new Set(),glows=new Set();
- const materialMap=new Map();object.traverse(o=>{if(o.isMesh){if(!materialMap.has(o.material)){const m=o.material.clone();if(m.emissiveIntensity>1){m.color.setHex(variant.color);m.emissive.setHex(variant.color);glows.add(m);}else if(i===2&&m.color.r>.25)m.color.setHex(0xc5a76c);materialMap.set(o.material,m);materials.add(m);}o.material=materialMap.get(o.material);}});
+ const materialMap=new Map();object.traverse(o=>{if(o.isMesh){if(!materialMap.has(o.material)){const m=o.material.clone();if(m.emissiveIntensity>1){m.color.setHex(variant.color);m.emissive.setHex(variant.color);glows.add(m);}else if(i===2&&m.color.r>.25)m.color.setHex(0xc5a76c);else if(i===3){const l=m.color.r*.2126+m.color.g*.7152+m.color.b*.0722;m.color.setRGB(l,l,l);}materialMap.set(o.material,m);materials.add(m);}o.material=materialMap.get(o.material);}});
  const nodes=Object.fromEntries(['front','back','left','right','lid','base','core'].map(n=>[n,object.getObjectByName(n)]));
  scene.add(object);return {object,parts:nodes,materials,glows,homes:new Map(Object.values(nodes).map(p=>[p,{position:p.position.clone(),rotation:p.rotation.clone()}]))};
 });
@@ -80,7 +80,7 @@ const particleMat=new THREE.MeshBasicMaterial({color:0x88ffff,transparent:true,o
 const vectors=Array.from({length:64},(_,i)=>new THREE.Vector3(Math.cos(i*2.399)*(.8+i%5*.15),Math.sin(i*1.7)*1.1+.3,Math.sin(i*2.399)*(.8+i%5*.15)));const dummy=new THREE.Object3D();
 const fx={energy:0,burst:0};let timeline=null,state='idle',raf=0,drag=null,moved=false,disposed=false;
 function reset(){tellHub('gacha-audio',{cue:'stop'});timeline?.kill();timeline=null;state='idle';
- boxes.forEach((b,i)=>{b.object.visible=soloIndex===null||i===soloIndex;b.object.position.set(soloIndex===null?(i-1)*2.15:0,soloIndex===null?-.35:0,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(soloIndex===null?.6:1);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
+ boxes.forEach((b,i)=>{b.object.visible=soloIndex===null?i<3:i===soloIndex;b.object.position.set(soloIndex===null?(i-1)*2.15:0,soloIndex===null?-.35:0,0);b.object.rotation.set(0,.15,0);b.object.scale.setScalar(soloIndex===null?.6:1);for(const [p,h]of b.homes){p.position.copy(h.position);p.rotation.copy(h.rotation);p.scale.setScalar(1);}b.materials.forEach(m=>{m.opacity=1;m.transparent=false;});b.glows.forEach(m=>m.emissiveIntensity=1.5);});
  reward.visible=false;reward.scale.setScalar(0);fx.energy=fx.burst=0;particleMat.opacity=0;light.intensity=0;bloom.strength=.3;$('#open').hidden=true;$('#status').textContent='Нажми на один из трёх боксов';$('#result').hidden=true;$('#resume').hidden=true;$('#choices').hidden=false;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=false);$('h1').textContent='Выбери свой бокс';if(soloIndex!==null){$('#choices').hidden=true;$('#reset').hidden=true;$('h1').textContent=variants[soloIndex].name;$('.title p').textContent='Твой сундук готов к открытию';$('#status').textContent='Готовим открытие…';}resize();}
 function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=soloIndex??(Number.isInteger(index)?index:selected);if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
 setBackdrop(selected);preparePrize(selected);

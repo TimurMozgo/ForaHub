@@ -298,3 +298,15 @@ body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-ca
 .hub-case-player.is-opening .hub-case-sound,.hub-case-player.is-opening .hub-case-player-close{visibility:hidden;pointer-events:none}
 .case-prize-chance{margin-top:9px;font-size:11px;color:#c9ad79}.case-open-notice{color:#d9bc89;font-size:12px;line-height:1.5;margin-bottom:12px}
 .case-list-title{font-size:17px;margin:24px 0 10px}.case-list-note{color:#aaa1b3;font-size:12px;line-height:1.5;margin:0 0 14px}.case-prize-future{opacity:.65}
+
+/* Five case identities: colour follows the case from its card to its reveal. */
+.hub-case-card.blue,.case-details-mode.blue{--case-accent:#32bcff}
+.hub-case-card.violet,.case-details-mode.violet{--case-accent:#bd55ff}
+.hub-case-card.gold,.case-details-mode.gold{--case-accent:#ffb735}
+.hub-case-card.silver,.case-details-mode.silver{--case-accent:#dceaf7}
+.hub-case-card.emerald,.case-details-mode.emerald{--case-accent:#35eb98}
+.hub-case-card.silver>img{filter:saturate(0) brightness(1.06)}
+.hub-case-card.emerald>img{filter:hue-rotate(-65deg)}
+.hub-case-card{border-color:color-mix(in srgb,var(--case-accent) 24%,transparent)}
+.hub-case-card:hover{border-color:var(--case-accent);box-shadow:0 14px 35px color-mix(in srgb,var(--case-accent) 12%,transparent)}
+.hub-case-card-price{color:var(--case-accent)}
