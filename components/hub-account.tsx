@@ -1,0 +1,15 @@
+"use client";
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {Gift,Star} from 'lucide-react';
+import type {CaseAccountView} from '../lib/case-account';
+import {CASE_CONFIG} from './case-opening-prizes';
+export function useHubAccount(){
+ const [account,setAccount]=useState<CaseAccountView|null>(null),[error,setError]=useState('');const serial=useRef(0);
+ const refresh=useCallback(async()=>{const id=++serial.current;try{const r=await fetch('/api/cases/account',{cache:'no-store'});if(!r.ok)throw Error(r.status===401?'Войди в аккаунт, чтобы увидеть награды.':'Не удалось загрузить баланс и подарки.');const data=await r.json() as CaseAccountView;if(id===serial.current){setAccount(data);setError('');}}catch(e){if(id===serial.current)setError(e instanceof Error?e.message:'Ошибка загрузки');}},[]);
+ useEffect(()=>{void refresh();const update=()=>{void refresh();},visible=()=>{if(!document.hidden)void refresh();};window.addEventListener('hub-account-updated',update);document.addEventListener('visibilitychange',visible);return()=>{serial.current++;window.removeEventListener('hub-account-updated',update);document.removeEventListener('visibilitychange',visible);};},[refresh]);
+ return {account,error,refresh};
+}
+export function HubInventory({account,error,onRetry}:{account:CaseAccountView|null;error:string;onRetry:()=>void}){
+ return <section className="hub-inventory"><div className="section-heading"><h2>Мой инвентарь</h2><Gift size={21}/></div><p className="inventory-note">Награды хаба сохраняются в аккаунте. Передача подарков в Telegram пока недоступна.</p>{error?<div role="alert" className="empty-state"><p>{error}</p><button className="small-button" onClick={onRetry}>Повторить</button></div>:!account?<p role="status">Загружаем подарки…</p>:account.inventory.length?<div className="case-prize-grid">{account.inventory.map(item=><article className={`case-prize-tile ${item.prize.kind==='gem'?'gem':''}`} key={item.prize.id}><img src={item.prize.image} alt={item.prize.label} width={120} height={120} loading="lazy"/><span>{item.prize.kind==='gem'?'КОЛЛЕКЦИОННЫЙ ПОДАРОК':'ПОДАРОК'}</span><h3>{item.prize.label}</h3><strong className="inventory-count">×{item.quantity}</strong></article>)}</div>:<div className="empty-state"><Gift size={30}/><h3>Здесь появятся твои подарки</h3><p>Подарки из кейсов добавляются автоматически.</p></div>}</section>;
+}
+export function HubTransactions({account}:{account:CaseAccountView|null}){return <div className="wallet-history"><h3>История открытий</h3>{!account?<span>Загружаем историю…</span>:!account.history.length?<span>Здесь появятся твои награды</span>:<ul className="hub-transactions">{account.history.map(r=><li key={r.requestId}><div><strong>{CASE_CONFIG[r.caseIndex].name}</strong><small>{new Date(r.openedAt).toLocaleString('ru-RU')}</small></div><div>{r.price>0&&<small>−{r.price} Stars</small>}<span>{r.prize.kind==='star'?<><Star size={13} fill="currentColor"/> +{r.prize.amount}</>:r.prize.label}</span></div></li>)}</ul>}</div>;}

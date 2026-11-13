@@ -70,7 +70,7 @@ const aura=new THREE.Sprite(auraMaterial);aura.scale.set(4.7,4.7,1);aura.renderO
 star.renderOrder=4;star.scale.setScalar(1.35);
 function preparePrize(index){
  const catalogueIndex=openingCaseIndex??index+1;
- const prize=catalogueIndex===0?getOpeningPrizes(0).find(p=>p.id===fixedPrizeId):pickOpeningPrize(catalogueIndex);
+ const prize=embedded?getOpeningPrizes(catalogueIndex).find(p=>p.id===fixedPrizeId):pickOpeningPrize(catalogueIndex);
  if(!prize)throw new Error('Daily prize required');star.visible=prize.kind==='star';giftSprite.visible=!star.visible;
  if(prize.image){giftMaterial.map=prizeTextures.get(prize.image);giftMaterial.needsUpdate=true;}
  auraMaterial.color.setHex(variants[index].color);$('#result h2').textContent=prize.label;
@@ -85,7 +85,7 @@ function reset(){tellHub('gacha-audio',{cue:'stop'});timeline?.kill();timeline=n
 function open(index=selected){if(state==='opening')return;if(state==='result')reset();selected=soloIndex??(Number.isInteger(index)?index:selected);if(!boxes[selected])return;chest=boxes[selected].object;parts=boxes[selected].parts;glowMaterials=boxes[selected].glows;state='opening';$('#open').disabled=true;$('#choices').hidden=true;document.querySelectorAll('[data-box]').forEach(b=>b.disabled=true);$('h1').textContent=variants[selected].name;light.color.setHex(variants[selected].color);particleMat.color.setHex(variants[selected].color);$('#status').textContent='Энергия нарастает…';
 setBackdrop(selected);preparePrize(selected);
 const angle=chest.rotation.y,gentle=$('#gentle').checked,turn=Math.PI*2;
-timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=openingCaseIndex===0;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='';}});
+timeline=gsap.timeline({paused:true,onComplete:()=>{state='result';$('#open').hidden=embedded;$('#open').disabled=false;$('#open').textContent='Открыть ещё раз';$('#status').textContent='';}});
 timeline.addLabel('windup',0)
  .call(()=>tellHub('gacha-audio',{cue:'charge',index:selected}),[],0)
  .to(chest.rotation,{y:angle+turn*1.5,x:gentle?0:.12,duration:2,ease:'power2.in'},0)
@@ -136,11 +136,11 @@ function render(time){if(disposed)return;raf=requestAnimationFrame(render);if(do
  particleMat.opacity=fx.burst>0?Math.max(0,1-fx.burst)*.9:fx.energy*.55;
  vectors.forEach((v,i)=>{const r=fx.burst>0?1+fx.burst*3:1.8-((t*.45+i/64)%1)*1.5;dummy.position.copy(v).multiplyScalar(r);dummy.position.y+=.2;dummy.scale.setScalar(.6+i%3*.4);dummy.updateMatrix();particles.setMatrixAt(i,dummy.matrix);});particles.instanceMatrix.needsUpdate=true;
  camera.lookAt(0,.35,0);composer.render();}
-$('#open').onclick=()=>{if(openingCaseIndex!==0)open(selected);};$('#reset').onclick=reset;document.querySelectorAll('[data-box]').forEach(b=>b.onclick=()=>open(Number(b.dataset.box)));
-window.addEventListener('message',e=>{if(!embedded||e.source!==window.parent||e.origin!==location.origin)return;if(e.data?.type==='gacha-open'&&Number.isInteger(e.data.index)&&e.data.index>=0&&e.data.index<5){if(openingCaseIndex===0){if(!getOpeningPrizes(0).some(p=>p.id===e.data.prizeId))return;fixedPrizeId=e.data.prizeId;}open(soloIndex??CASE_CONFIG[e.data.index].palette);}});
+$('#open').onclick=()=>{if(!embedded)open(selected);};$('#reset').onclick=reset;document.querySelectorAll('[data-box]').forEach(b=>b.onclick=()=>open(Number(b.dataset.box)));
+window.addEventListener('message',e=>{if(!embedded||e.source!==window.parent||e.origin!==location.origin)return;if(e.data?.type==='gacha-open'&&Number.isInteger(e.data.index)&&e.data.index>=0&&e.data.index<5){if(e.data.index!==openingCaseIndex||state==='opening'||state==='result')return;if(!getOpeningPrizes(openingCaseIndex).some(p=>p.id===e.data.prizeId))return;fixedPrizeId=e.data.prizeId;open(soloIndex??CASE_CONFIG[e.data.index].palette);}});
 $('#gentle').checked=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-renderer.domElement.addEventListener('pointerdown',e=>{if(state!=='idle'||openingCaseIndex===0)return;drag={x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
+renderer.domElement.addEventListener('pointerdown',e=>{if(state!=='idle'||embedded)return;drag={x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);});
 renderer.domElement.addEventListener('pointerup',e=>{if(drag&&state==='idle'&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<12){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(boxes.filter(b=>b.object.visible).map(b=>b.object),true)[0];if(hit){const i=boxes.findIndex(b=>{let p=hit.object;while(p){if(p===b.object)return true;p=p.parent;}return false;});if(i>=0)open(i);}}drag=null;});renderer.domElement.addEventListener('pointercancel',()=>drag=null);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&timeline?.isActive()){timeline.pause();tellHub('gacha-audio',{cue:'pause'});$('#resume').hidden=false;}});$('#resume').onclick=()=>{tellHub('gacha-audio',{cue:'resume'});timeline?.resume();$('#resume').hidden=true;};
 $('#download').onclick=()=>{const blob=new Blob([modelBytes],{type:'model/gltf-binary'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='daily-chest.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
