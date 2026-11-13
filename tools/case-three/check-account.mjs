@@ -26,5 +26,10 @@ for(const kind of ['star','gift','gem']){let a={...emptyCaseAccount(),balance:20
 user={userId:'bob'};assert.equal((await (await GET()).json()).balance,0);failWrites=true;assert.equal((await POST(request(0))).status,503);assert(!rows.has('case-account:sites:bob'));failWrites=false;
 rows.set('case-daily:sites:bob',{snapshot_json:JSON.stringify({openedAt:now}),revision:1});assert.equal((await POST(request(0))).status,409);assert.equal((await (await GET()).json()).nextAt,now+86400000);
 assert.equal((await POST(request(7))).status,400);assert.equal((await POST(new Request('https://hub.example/api/cases/open',{method:'POST',headers:{origin:'https://evil.example'}}))).status,403);
+const {OWNER_CREDIT_USER}=await compile('../../lib/case-owner-credit.ts');
+user={userId:OWNER_CREDIT_USER};const grants=await Promise.all(Array.from({length:8},()=>GET()));assert(grants.every(r=>r.status===200));const ownerKey='case-account:sites:'+OWNER_CREDIT_USER;let owner=JSON.parse(rows.get(ownerKey).snapshot_json);assert.equal(owner.balance,1000);assert.equal(owner.credits.length,1);
+const purchase=await POST(request(4));assert.equal(purchase.status,200);const ownerAfter=JSON.parse(rows.get(ownerKey).snapshot_json);assert.equal(ownerAfter.balance,900+((await purchase.json()).prize.amount||0));await GET();assert.equal(JSON.parse(rows.get(ownerKey).snapshot_json).balance,ownerAfter.balance);assert.equal(JSON.parse(rows.get(ownerKey).snapshot_json).credits.length,1);
+user={userId:'charlie'};assert.equal((await (await GET()).json()).balance,0);
+console.log('PASS: owner-only1000 grant, concurrent exactly-once credit, persistence after spending, no credit for others.');
 user=null;assert.equal((await GET()).status,401);assert.equal((await POST(request(0))).status,401);Date.now=originalNow;
 console.log('PASS: atomic debit+award, every prize type, duplicate/retry safety, paid races, daily boundaries/migration, persistence, auth and user isolation.');
