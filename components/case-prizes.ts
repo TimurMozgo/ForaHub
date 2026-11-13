@@ -10,6 +10,18 @@ export const GIFTS: Record<string, Prize> = {
   jester:gift("jester","Jester Hat","gem"),homemade:gift("homemade","Homemade Cake","gem"),
   candle:gift("candle","B-Day Candle","gem"),sparkler:gift("sparkler","Party Sparkler","gem"),
   cookie:gift("cookie","Ginger Cookie","gem"),candy:gift("candy","Candy Cane","gem"),
+  bowtie:gift("bowtie","Bow Tie","gem"),
+  evileye:gift("evileye","Evil Eye","gem"),
+  lightsword:gift("lightsword","Light Sword","gem"),
+  jellybunny:gift("jellybunny","Jelly Bunny","gem"),
+  crystalball:gift("crystalball","Crystal Ball","gem"),
+  lovepotion:gift("lovepotion","Love Potion","gem"),
+  madpumpkin:gift("madpumpkin","Mad Pumpkin","gem"),
+  flyingbroom:gift("flyingbroom","Flying Broom","gem"),
+  bondedring:gift("bondedring","Bonded Ring","gem"),
+  genielamp:gift("genielamp","Genie Lamp","gem"),
+  kissedfrog:gift("kissedfrog","Kissed Frog","gem"),
+  magicpotion:gift("magicpotion","Magic Potion","gem"),
   redo:{...gift("redo","Redo · Resistance Dog","gem"),topPrize:true},
 };
 

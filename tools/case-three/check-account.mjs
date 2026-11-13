@@ -31,5 +31,21 @@ user={userId:OWNER_CREDIT_USER};const grants=await Promise.all(Array.from({lengt
 const purchase=await POST(request(4));assert.equal(purchase.status,200);const ownerAfter=JSON.parse(rows.get(ownerKey).snapshot_json);assert.equal(ownerAfter.balance,900+((await purchase.json()).prize.amount||0));await GET();assert.equal(JSON.parse(rows.get(ownerKey).snapshot_json).balance,ownerAfter.balance);assert.equal(JSON.parse(rows.get(ownerKey).snapshot_json).credits.length,1);
 user={userId:'charlie'};assert.equal((await (await GET()).json()).balance,0);
 console.log('PASS: owner-only1000 grant, concurrent exactly-once credit, persistence after spending, no credit for others.');
+
+const {POST:SELL}=await compile('../../app/api/cases/sell/route.ts');
+const saleRequest=(prizeId,openingId,requestId=crypto.randomUUID(),extra={})=>new Request('https://hub.example/api/cases/sell',{method:'POST',headers:{origin:'https://hub.example','Content-Type':'application/json'},body:JSON.stringify({prizeId,openingId,requestId,...extra})});
+user={userId:'seller'};const sellerKey='case-account:sites:seller';
+const gift=getOpeningPrizes(4).find(p=>p.kind==='gift');let seller={...emptyCaseAccount(),balance:300};const gifts=[];
+for(let i=0;i<2;i++){const r={requestId:crypto.randomUUID(),caseIndex:4,price:100,prize:gift,openedAt:now};gifts.push(r);seller=applyOpening(seller,r);}rows.set(sellerKey,{snapshot_json:JSON.stringify(seller),revision:1});
+const saleId=crypto.randomUUID();const sold=await Promise.all(Array.from({length:8},()=>SELL(saleRequest(gift.id,gifts[0].requestId,saleId,{amount:999999}))));assert(sold.every(r=>r.status===200));
+let result=JSON.parse(rows.get(sellerKey).snapshot_json);assert.equal(result.balance,100+gift.costStars);assert.equal(result.inventory[gift.id].quantity,1);assert.equal(Object.keys(result.sales).length,1);
+assert.equal((await SELL(saleRequest(gift.id,gifts[0].requestId))).status,409);
+const race=await Promise.all(Array.from({length:8},()=>SELL(saleRequest(gift.id,gifts[1].requestId))));assert.equal(race.filter(r=>r.status===200).length,1);
+result=JSON.parse(rows.get(sellerKey).snapshot_json);assert.equal(result.balance,100+gift.costStars*2);assert(!result.inventory[gift.id]);
+assert.equal((await SELL(saleRequest(gift.id,gifts[0].requestId,saleId))).status,200);assert.equal(JSON.parse(rows.get(sellerKey).snapshot_json).balance,result.balance);
+user={userId:'outsider'};assert.equal((await SELL(saleRequest(gift.id,gifts[0].requestId))).status,409);
+user={userId:'seller'};assert.equal((await SELL(new Request('https://hub.example/api/cases/sell',{method:'POST',headers:{origin:'https://evil.example'}}))).status,403);
+user=null;assert.equal((await SELL(saleRequest(gift.id,gifts[0].requestId))).status,401);
+console.log('PASS: sale debit+credit atomicity, duplicate/multi-request race protection, stored prices, isolation, auth.');
 user=null;assert.equal((await GET()).status,401);assert.equal((await POST(request(0))).status,401);Date.now=originalNow;
 console.log('PASS: atomic debit+award, every prize type, duplicate/retry safety, paid races, daily boundaries/migration, persistence, auth and user isolation.');

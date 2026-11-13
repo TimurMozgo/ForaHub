@@ -13,3 +13,5 @@ for(let index=0;index<5;index++){
 assert.throws(()=>prizeForTicket(1,-1));assert.throws(()=>prizeForTicket(1,TOTAL_WEIGHT));assert.throws(()=>pickOpeningPrize(1,()=>1));assert.equal(dailyAvailableAt(100),86400100);
 console.log('PASS: all prize intervals including rarest NFT, every category, visible nonzero chances, assets, expected-cost caps and loyalty provision.');
 
+
+const seen=new Set();for(let i=0;i<5;i++)for(const p of getOpeningPrizes(i).filter(p=>p.kind==='gem'&&p.id!=='redo')){assert(!seen.has(p.id),'Duplicate NFT '+p.id);seen.add(p.id);}console.log('PASS: disjoint NFT collections except Redo');

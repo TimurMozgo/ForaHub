@@ -15,7 +15,7 @@ export const PAID_RANDOM_RETURN=.28;
 export const LOYALTY_BUDGET_RATE=.2;
 // Planning assumptions in Stars, NOT verified purchase quotes. No real issuance yet.
 // Redo = user's quoted 46,000; other NFT values must be replaced by landed stock costs.
-export const PRIZE_COSTS:Record<string,number>={heart:15,bear:15,box:25,rose:25,cake:50,flowers:50,rocket:50,champagne:50,trophy:100,ring:100,diamond:100,lollipop:500,candy:510,jester:570,sparkler:630,candle:640,homemade:660,cookie:670,calendar:750,redo:46000};
+export const PRIZE_COSTS:Record<string,number>={heart:15,bear:15,box:25,rose:25,cake:50,flowers:50,rocket:50,champagne:50,trophy:100,ring:100,diamond:100,lollipop:500,candy:510,jester:570,sparkler:630,candle:640,homemade:660,cookie:670,calendar:750,redo:46000,bowtie:800,evileye:1200,lightsword:950,jellybunny:1150,crystalball:2000,lovepotion:2200,madpumpkin:1800,flyingbroom:1950,bondedring:6500,genielamp:5500,kissedfrog:7300,magicpotion:9200};
 const GIFT_IDS=[['heart','bear','box','rose'],['heart','bear','box','champagne'],['bear','rose','flowers','rocket'],['heart','box','cake','flowers'],['cake','rocket','ring','trophy']];
 const star=(amount:number,weight:number):OpeningPrize=>({id:'stars-'+amount,kind:'star',amount,label:amount+' '+(amount===1?'звезда':amount===2?'звезды':'звёзд'),weight,costStars:amount});
 const expected=(table:readonly OpeningPrize[])=>table.reduce((n,p)=>n+p.costStars*p.weight/TOTAL_WEIGHT,0);

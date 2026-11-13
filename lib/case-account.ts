@@ -1,8 +1,9 @@
 import {CASE_CONFIG,dailyAvailableAt,type OpeningPrize} from '../components/case-opening-prizes';
+import type {CaseSale} from './case-sale';
 export type CaseReceipt={requestId:string;caseIndex:number;price:number;prize:OpeningPrize;openedAt:number};
 export type InventoryItem={prize:OpeningPrize;quantity:number;lastWonAt:number};
 export type CaseCredit={id:string;amount:number;at:number;label:string;source:'reward'};
-export type CaseAccount={version:1;balance:number;nextAt:number;inventory:Record<string,InventoryItem>;receipts:Record<string,CaseReceipt>;credits?:CaseCredit[]};
+export type CaseAccount={version:1;balance:number;nextAt:number;inventory:Record<string,InventoryItem>;receipts:Record<string,CaseReceipt>;credits?:CaseCredit[];sales?:Record<string,CaseSale>};
 export const emptyCaseAccount=(nextAt=0):CaseAccount=>({version:1,balance:0,nextAt,inventory:{},receipts:{}});
 export function validateAccount(a:CaseAccount){if(a.version!==1||!Number.isSafeInteger(a.balance)||a.balance<0||!Number.isSafeInteger(a.nextAt)||a.nextAt<0||!a.inventory||!a.receipts)throw Error('invalid_account');return a;}
 export function priorOpening(a:CaseAccount,requestId:string,caseIndex:number){const prior=a.receipts[requestId];if(prior&&prior.caseIndex!==caseIndex)throw Error('request_conflict');return prior;}
@@ -23,5 +24,5 @@ export function applyOpening(a:CaseAccount,receipt:CaseReceipt):CaseAccount{
  else{const old=next.inventory[p.id];next.inventory[p.id]={prize:p,quantity:(old?.quantity??0)+1,lastWonAt:receipt.openedAt};}
  return validateAccount(next);
 }
-export function accountView(a:CaseAccount,revision:number){return {balance:a.balance,nextAt:a.nextAt,revision,serverNow:Date.now(),credits:a.credits??[],inventory:Object.values(a.inventory).sort((a,b)=>b.lastWonAt-a.lastWonAt),history:Object.values(a.receipts).sort((a,b)=>b.openedAt-a.openedAt).slice(0,20)};}
+export function accountView(a:CaseAccount,revision:number){return {balance:a.balance,nextAt:a.nextAt,revision,serverNow:Date.now(),credits:a.credits??[],sales:Object.values(a.sales??{}).sort((a,b)=>b.soldAt-a.soldAt).slice(0,20),inventory:Object.values(a.inventory).sort((a,b)=>b.lastWonAt-a.lastWonAt),history:Object.values(a.receipts).sort((a,b)=>b.openedAt-a.openedAt).slice(0,20)};}
 export type CaseAccountView=ReturnType<typeof accountView>;

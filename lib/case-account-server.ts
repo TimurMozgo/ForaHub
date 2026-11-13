@@ -2,7 +2,18 @@ import {env} from 'cloudflare:workers';
 import {CASE_CONFIG,pickOpeningPrize,dailyAvailableAt} from '../components/case-opening-prizes';
 import {emptyCaseAccount,validateAccount,priorOpening,checkOpening,applyOpening,accountView,type CaseAccount,type CaseReceipt} from './case-account';
 import {applyOwnerCredit,OWNER_CREDIT_ID} from './case-owner-credit';
+import {applySale} from './case-sale';
 type Row={snapshot_json:string;revision:number};
+export async function settleGiftSale(userId:string,requestId:string,prizeId:string,openingId?:string){
+ for(let attempt=0;attempt<8;attempt++){
+  const {account,revision}=await readCaseAccount(userId),now=Date.now();
+  const result=applySale(account,requestId,prizeId,openingId,now);
+  if(result.account===account)return {sale:result.sale,account:accountView(account,revision)};
+  const update=await env.DB!.prepare(`INSERT INTO turret_saves(player_id,snapshot_json,previous_json,revision,mutation_id,updated_at) VALUES(?,?,NULL,1,?,?) ON CONFLICT(player_id) DO UPDATE SET snapshot_json=excluded.snapshot_json,revision=turret_saves.revision+1,mutation_id=excluded.mutation_id,updated_at=excluded.updated_at WHERE turret_saves.revision=?`).bind(key(userId),JSON.stringify(result.account),requestId,new Date(now).toISOString(),revision).run();
+  if(update.meta.changes)return {sale:result.sale,account:accountView(result.account,revision+1)};
+ }
+ throw Error('retry');
+}
 const key=(userId:string)=>`case-account:sites:${userId}`;
 async function readStoredAccount(userId:string){
  const row=await env.DB!.prepare('SELECT snapshot_json,revision FROM turret_saves WHERE player_id=?').bind(key(userId)).first<Row>();
