@@ -296,3 +296,5 @@ body>.hub-case-player .hub-case-player-close,body>.hub-case-player .hub-case-sou
 body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-case-sound:hover{color:#fff;background:#ffffff0c}
 .hub-case-player::backdrop{background:#080e19}
 .hub-case-player.is-opening .hub-case-sound,.hub-case-player.is-opening .hub-case-player-close{visibility:hidden;pointer-events:none}
+.case-prize-chance{margin-top:9px;font-size:11px;color:#c9ad79}.case-open-notice{color:#d9bc89;font-size:12px;line-height:1.5;margin-bottom:12px}
+.case-list-title{font-size:17px;margin:24px 0 10px}.case-list-note{color:#aaa1b3;font-size:12px;line-height:1.5;margin:0 0 14px}.case-prize-future{opacity:.65}

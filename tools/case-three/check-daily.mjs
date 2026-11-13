@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';import {build} from 'esbuild';
+let row=null,user={userId:'qa'},now=1000000000;const originalNow=Date.now;Date.now=()=>now;
+globalThis.__qaUser=()=>user;
+globalThis.__qaDb={prepare:()=>({bind:(...args)=>({first:async()=>row?{...row}:null,run:async()=>{const expected=args.at(-1);if((row?.revision??0)!==expected)return {meta:{changes:0}};row={snapshot_json:args[1],revision:expected+1};return {meta:{changes:1}};}})})};
+const built=await build({entryPoints:[new URL('../../app/api/cases/daily/route.ts',import.meta.url).pathname.replace(/^\/(.:)/,'$1')],bundle:true,write:false,format:'esm',platform:'node',plugins:[{name:'test-bindings',setup(b){b.onResolve({filter:/^(cloudflare:workers)$|chatgpt-auth$/},args=>({path:args.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},args=>({contents:args.path==='cloudflare:workers'?'export const env={DB:globalThis.__qaDb};':'export const getChatGPTUser=async()=>globalThis.__qaUser();',loader:'js'}));}}]});
+const {POST,GET}=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].contents).toString('base64'));
+const ids=Array.from({length:8},()=>crypto.randomUUID());const req=id=>new Request('https://hub.example/api/cases/daily',{method:'POST',headers:{origin:'https://hub.example','Content-Type':'application/json'},body:JSON.stringify({requestId:id})});
+const results=await Promise.all(ids.map(id=>POST(req(id))));assert.equal(results.filter(r=>r.status===200).length,1);assert.equal(results.filter(r=>r.status===409).length,7);
+const winner=results.findIndex(r=>r.status===200),payload=await results[winner].json();const repeated=await POST(req(ids[winner]));assert.equal(repeated.status,200);assert.equal((await repeated.json()).prize.id,payload.prize.id);
+now+=86400000-1;assert.equal((await POST(req(crypto.randomUUID()))).status,409);now++;assert.equal((await POST(req(crypto.randomUUID()))).status,200);
+assert.equal((await POST(new Request('https://hub.example/api/cases/daily',{method:'POST',headers:{origin:'https://evil.example'}}))).status,403);
+user=null;assert.equal((await GET()).status,401);Date.now=originalNow;console.log('PASS: concurrent daily claims, idempotent retry, exact 24-hour boundary, authentication and origin checks.');
