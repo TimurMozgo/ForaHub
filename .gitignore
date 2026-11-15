@@ -17,6 +17,7 @@
 /.next/
 /.vinext/
 /out/
+/out-pages/
 next-env.d.ts
 *.tsbuildinfo
 
