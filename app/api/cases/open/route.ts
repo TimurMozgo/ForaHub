@@ -1,8 +1,10 @@
+import {casesAvailable} from '../../../../lib/launch-features';
 import {getChatGPTUser} from '../../../chatgpt-auth';
 import {settleCaseOpening} from '../../../../lib/case-account-server';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'private, no-store','Vary':'Cookie'};
 export async function handleOpen(request:Request,fixedCase?:number){
+ if(!casesAvailable()) return Response.json({error:"coming_soon"},{status:503,headers:{"Cache-Control":"no-store"}});
  if(request.headers.get('origin')!==new URL(request.url).origin)return Response.json({error:'invalid_origin'},{status:403,headers});
  const user=await getChatGPTUser();if(!user)return Response.json({error:'sign_in_required'},{status:401,headers});
  let requestId:string,caseIndex:number;
@@ -11,3 +13,4 @@ export async function handleOpen(request:Request,fixedCase?:number){
  catch(e){const message=e instanceof Error?e.message:'';const known=['cooldown','insufficient_balance','request_conflict','account_capacity','retry'];return Response.json({error:known.includes(message)?message:'unavailable'},{status:known.includes(message)?409:503,headers});}
 }
 export async function POST(request:Request){return handleOpen(request);}
+
