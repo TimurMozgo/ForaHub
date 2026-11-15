@@ -20,7 +20,7 @@ export function GameDetail({game,onLaunch,wishlisted,onWishlist}:{game:Game;onLa
       <p className="game-detail-lead">{lead}</p>
       {info?.features&&<div className="game-detail-features">{info.features.map(f=><span key={f}>{f}</span>)}</div>}
       <button className="game-detail-more" aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}><span>Описание и детали</span><span>{expanded?"Свернуть ↑":"Подробнее ↓"}</span></button>
-      {expanded&&<div className="game-detail-expanded">{game.description.split("\n\n").map((p,i)=><p key={i}>{p}</p>)}{info?.extra&&<p className="game-detail-extra">{info.extra}</p>}</div>}
+      <div className={`game-detail-collapse ${expanded?"is-expanded":""}`} aria-hidden={!expanded} inert={!expanded}><div><div className="game-detail-expanded">{game.description.split("\n\n").map((p,i)=><p key={i}>{p}</p>)}{info?.extra&&<p className="game-detail-extra">{info.extra}</p>}</div></div></div>
     </div>
     <div className="game-detail-footer">{onLaunch?<button className="gold-button full" onClick={onLaunch}><Gamepad2 size={18}/> Играть внутри хаба <ArrowRight size={17}/></button>:<button className="gold-button full" onClick={onWishlist}>{wishlisted?<><Check size={18}/> В списке ожидания</>:<><Plus size={18}/> Добавить в список ожидания</>}</button>}<p>{info?.save||"Игра готовится к запуску. Мы сообщим, когда она появится в хабе."}</p></div>
   </div>;

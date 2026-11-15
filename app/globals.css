@@ -325,3 +325,21 @@ body>.hub-case-player .hub-case-player-close:hover,body>.hub-case-player .hub-ca
 .case-win-actions{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;width:min(520px,calc(100% - 28px))}.case-win-actions>.case-claim-gift,.case-win-actions>.case-play-again,.case-win-actions>.gift-actions{flex:1;min-width:0;width:auto;margin:0}.case-win-actions .gift-actions{position:relative}.case-win-actions .gift-actions button,.case-win-actions>.case-claim-gift,.case-win-actions>.case-play-again{height:48px;min-height:48px;padding:9px 5px;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;border-radius:12px}.case-win-actions>p{flex-basis:100%;margin-top:8px}.case-win-actions .gift-actions>p{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);width:min(300px,80vw);padding:10px;border-radius:10px;background:#111b29f5;color:#f3d7a1}.case-win-actions .gift-withdraw{display:none}
 
 .game-art.patrol,.detail-art.patrol{background:#06102b url('/patrol-rush-cover.png') center/cover no-repeat}
+
+/* ForaHub: shared motion for navigation, cards, dialogs and embedded games. */
+.section-view{animation:fora-section-in .32s cubic-bezier(.2,.7,.25,1) both}.section-view.is-leaving{animation:fora-section-out .14s ease-in both;pointer-events:none}
+.game-card,.hub-case-card,.case-prize-tile,.quest-row{animation:fora-card-in .38s cubic-bezier(.2,.7,.25,1) backwards}
+.game-card:nth-child(2),.hub-case-card:nth-child(2),.case-prize-tile:nth-child(2),.quest-row:nth-child(2){animation-delay:35ms}
+.game-card:nth-child(3),.hub-case-card:nth-child(3),.case-prize-tile:nth-child(3),.quest-row:nth-child(3){animation-delay:70ms}
+.game-card:nth-child(4),.hub-case-card:nth-child(4),.case-prize-tile:nth-child(4),.quest-row:nth-child(4){animation-delay:105ms}
+.game-card:nth-child(n+5),.hub-case-card:nth-child(n+5),.case-prize-tile:nth-child(n+5),.quest-row:nth-child(n+5){animation-delay:140ms}
+.game-detail-collapse{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .3s ease,opacity .22s ease}.game-detail-collapse.is-expanded{grid-template-rows:1fr;opacity:1}.game-detail-collapse>div{overflow:hidden;min-height:0}
+body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-panel .hub-gacha-frame{opacity:0;transition:opacity .35s ease}.hub-case-player-panel.scene-ready .hub-gacha-frame{opacity:1}
+.forge-player iframe{opacity:0;transition:opacity .35s ease}.forge-player iframe.is-ready{opacity:1}
+.nav-item,.bottom-nav button,.tabs button,.small-button,.gold-button,.case-details-open,.favorite,.case-icon-button{transition:background-color .2s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .18s ease}
+.gold-button:active,.small-button:active,.case-details-open:active,.hub-case-card:active{transform:scale(.98)}
+@keyframes fora-section-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fora-section-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-5px)}}
+@keyframes fora-card-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes fora-fade-in{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.section-view,.section-view.is-leaving,.game-card,.hub-case-card,.case-prize-tile,.quest-row,body>.hub-case-player{animation:none!important}.game-detail-collapse,.forge-player iframe,.hub-case-player-panel .hub-gacha-frame{transition:none!important}}
