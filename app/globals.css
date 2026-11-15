@@ -355,3 +355,6 @@ body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-pane
  .game-detail-collapse{transition:grid-template-rows .3s ease,opacity .22s ease!important}
  .forge-player iframe,.hub-case-player-panel .hub-gacha-frame{transition:opacity .35s ease!important}
 }
+
+/* The approved ForaHub emblem, with transparent edges on both header surfaces. */
+.brand-symbol{background:none;border:0;border-radius:0}.forahub-mark{display:block;object-fit:contain;flex-shrink:0}.brand-symbol .forahub-mark{width:42px;height:42px}.mobile-brand .forahub-mark{width:32px;height:32px}
