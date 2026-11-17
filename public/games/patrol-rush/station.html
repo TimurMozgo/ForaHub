@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#17201b"><meta name="description" content="Пиксельный полицейский участок: комната ожидания и отряд из трёх полицейских."><title>Полицейский участок</title><link rel="stylesheet" href="style.css"></head><body>
+<main id="app">
+<section class="stage" aria-label="Игровая сцена"><canvas id="game" width="384" height="704" tabindex="0" aria-label="Участок. WASD или стрелки — движение. E — встать или сесть. Нажатие на пол — подойти."></canvas><div class="shade"></div>
+<div id="loading" class="overlay"><div><h2>ПОЛИЦЕЙСКИЙ УЧАСТОК</h2><p id="load-status">Загрузка отряда…</p><button id="retry" hidden>Повторить</button></div></div>
+<div id="paused" class="overlay" hidden><div><span class="small-label">СМЕНА ПРИОСТАНОВЛЕНА</span><h2>ПАУЗА</h2><p>Команда подождёт.</p><button id="resume">ПРОДОЛЖИТЬ</button></div></div>
+</section>
+<header class="hud"><div class="hud-line"><h1><i></i> ПОЛИЦИЯ</h1><div class="header-actions"><button id="fullscreen" aria-label="Развернуть на весь экран" title="На весь экран">⛶</button><button id="pause" aria-label="Поставить на паузу">Ⅱ</button></div></div><div class="location">01 / ПОЛИЦЕЙСКИЙ УЧАСТОК</div><div class="squad"><span>ОТРЯД <b>3 <small>/ 3</small></b></span><span id="state" aria-live="polite">ЗАГРУЗКА</span></div><div class="squad-bar"><i></i><i></i><i></i></div><div class="objective"><span>КОМНАТА ОЖИДАНИЯ</span><p id="hint">ВСТАНЬ И ОСМОТРИСЬ В УЧАСТКЕ</p></div></header>
+<div class="intro" aria-hidden="true"><span>БАЗА ОТРЯДА</span><strong>ПОЛИЦЕЙСКИЙ УЧАСТОК</strong></div>
+<section class="controls" aria-label="Управление"><div class="move-control"><div id="joystick" aria-label="Джойстик движения"><div class="inner-ring"></div><div id="stick"></div></div><span>ДВИЖЕНИЕ</span></div><div class="action-control"><button id="action" disabled><span id="action-icon">↑</span><span id="action-text">ВСТАТЬ</span></button><span>ДЕЙСТВИЕ · E</span></div></section>
+<footer>WASD / СТРЕЛКИ · НАЖАТИЕ НА ПОЛ</footer>
+</main><script src="manifest.js"></script><script src="game.js"></script></body></html>

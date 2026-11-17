@@ -1,0 +1,47 @@
+Downloaded sound effects used in the high-speed pursuit
+
+police-siren.mp3
+Title: police siren.wav
+Author: vlammenos
+Source: https://freesound.org/people/vlammenos/sounds/52906/
+Download: https://cdn.freesound.org/previews/52/52906_101023-hq.mp3
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+The downloaded preview is bundled locally. Playback volume is reduced and loop points are applied in the game.
+
+police-command.mp3
+Title: Siren.ogg
+Author: egomassive; original recording Police Siren Yelp by MultiMax2121
+Source: https://freesound.org/people/egomassive/sounds/536773/
+Download: https://cdn.freesound.org/previews/536/536773_1415754-hq.mp3
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+The downloaded preview is bundled locally and played when the player issues a stop command.
+
+Retrieved: 2026-11-10. No external sound requests are made during gameplay.
+
+Gunshot: "gunshot" by jmschl96 (Freesound sound 807412)
+Source: https://freesound.org/people/jmschl96/sounds/807412/
+Downloaded preview: https://cdn.freesound.org/previews/807/807412_15992731-hq.mp3
+License: Creative Commons Zero / CC0 1.0, https://creativecommons.org/publicdomain/zero/1.0/
+Used without modification. Downloaded 2026-11-10.
+
+Station and city foley added 2026-11-17:
+Kenney RPG Audio, Kenney, CC0. https://kenney.nl/assets/rpg-audio
+Downloaded from https://opengameart.org/sites/default/files/RPGsounds_Kenney.zip
+footstep00-02, doorOpen_1, doorClose_1, metalLatch, cloth1, creak2.
+Converted to mono MP3, trimmed silence, limited peaks. Cell gate combines latch and lowered creak; car door uses latch. Gear combines cloth and zipper.
+Zipper, CC0: https://opengameart.org/content/zipper
+Downloaded https://opengameart.org/sites/default/files/zipper-1.wav
+Car engine Start Up 02, looneybits, CC0: https://opengameart.org/content/car-engine-start-up-02
+Downloaded https://opengameart.org/sites/default/files/engine_start_up_01.wav
+Start trimmed; stop adapted from final engine segment with lowered pitch and fade.
+Radio call: original generated noise burst and sine acknowledgement, no voice (pending user recording).
+
+2026-11-17 engine revision:
+engine-start-v2.mp3, engine-stop-v2.mp3, engine-loop.mp3: Car engine start up running and turning off.wav by sound_catcher99, CC0.
+https://freesound.org/people/sound_catcher99/sounds/425158/
+Preview downloaded: https://cdn.freesound.org/previews/425/425158_4370343-hq.mp3
+Start 0.35–2.15s; stop 9.5–11.15s; loop 4.6–8.6s with circular crossfade. Normalized/converted to mono MP3.
+car-door-open.mp3, car-door-close.mp3: CarDoor.ogg by egomassive (originals by DCPoke and Coltures), CC0.
+https://freesound.org/people/egomassive/sounds/536734/
+Preview: https://cdn.freesound.org/previews/536/536734_1415754-hq.mp3
+Split opening/closing at 0.9s, normalized and faded edges.
