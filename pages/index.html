@@ -36,7 +36,7 @@ html,body{margin:0;background:#101114}
   boot.classList.add('ready');
   root.removeAttribute('inert');root.removeAttribute('aria-hidden');
   boot.classList.add('leaving');
-  setTimeout(()=>{boot.remove();root.classList.remove("boot-pending")},500);
+  setTimeout(()=>{boot.remove();root.classList.remove("boot-pending");window.dispatchEvent(new Event("tinell:entered"))},500);
  },{once:true});
 })();
 </script><script type="module" src="/main.tsx"></script></body></html>

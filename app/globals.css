@@ -371,8 +371,9 @@ body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-pane
 /* Approved stacked TG / TinellGame transparent logo. */
 .tinellgame-logo{display:block;object-fit:contain;width:106px;height:50px;flex-shrink:0}.brand{justify-content:center}.mobile-brand .tinellgame-logo{width:86px;height:41px}
 
-/* Start the home-card sequence only once the startup overlay is gone. */
-.home-games>.game-card{animation:tinell-home-card-in .55s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--card-order,0) * 110ms)}
-.boot-pending .home-games>.game-card{animation-play-state:paused!important;pointer-events:none}
-@keyframes tinell-home-card-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.home-games>.game-card{animation:fora-fade-in .4s ease backwards!important;animation-delay:calc(var(--card-order,0) * 110ms)!important;transform:none}}
+/* Reveal only when a card enters the viewport after the splash. */
+.home-games>.game-card{opacity:0;animation:none!important}
+.home-games>.game-card.is-revealed{animation:tinell-home-card-in .65s cubic-bezier(.22,1,.36,1) both!important;animation-delay:var(--reveal-delay,0ms)!important;animation-iteration-count:1!important}
+@keyframes tinell-home-card-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tinell-home-card-fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.home-games>.game-card.is-revealed{animation-name:tinell-home-card-fade!important;animation-duration:.65s!important;transform:none}}
