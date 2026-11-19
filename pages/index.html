@@ -1,1 +1,34 @@
-<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TinellGame — много миров, один хаб</title><link rel="icon" type="image/png" href="/ForaHub/tinellgame-logo-v2.png"><link rel="apple-touch-icon" href="/ForaHub/tinellgame-logo-v2.png"><script src="https://telegram.org/js/telegram-web-app.js"></script><script src="/ForaHub/pages-local.js"></script></head><body><div id="root"></div><script type="module" src="/main.tsx"></script></body></html>
+<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>TinellGame — много миров, один хаб</title><link rel="icon" type="image/png" href="/ForaHub/tinellgame-logo-v2.png"><link rel="apple-touch-icon" href="/ForaHub/tinellgame-logo-v2.png"><script defer src="https://telegram.org/js/telegram-web-app.js"></script><script defer src="/ForaHub/pages-local.js"></script><link rel="preload" as="image" href="/ForaHub/tinellgame-logo-v2.png">
+<style>
+html,body{margin:0;background:#101114}
+#hub-boot{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 46%,#dfbd800b,transparent 55%),#101114;color:#dfbd80;transition:opacity .45s ease;overscroll-behavior:none;touch-action:none}
+#hub-boot.leaving{opacity:0;pointer-events:none}
+.boot-content{width:min(220px,65vw);text-align:center;transform:translateY(-20px)}
+.boot-logo{display:block;width:100%;height:auto;margin:0 auto 32px}
+.boot-track{height:4px;overflow:hidden;border-radius:999px;background:#dfbd801a}
+.boot-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#b78b46,#f2dba5);box-shadow:0 0 14px #dfbd8055;animation:boot-progress 9s cubic-bezier(.15,.65,.2,1) forwards;transition:width .35s ease}
+#hub-boot.ready .boot-fill{animation:none;width:100%}
+.boot-error{display:none;font:13px/1.6 system-ui;margin-top:24px;color:#c9c3b8}
+.boot-error button{display:block;margin:12px auto 0;padding:10px 18px;border:1px solid #dfbd8044;border-radius:9px;background:#dfbd8014;color:#dfbd80;font:inherit;cursor:pointer}
+#hub-boot.failed .boot-error{display:block}
+@keyframes boot-progress{0%{width:3%}45%{width:65%}100%{width:88%}}
+@media(prefers-reduced-motion:reduce){#hub-boot,.boot-fill{transition:none}.boot-fill{animation:none;width:55%}.boot-content{transform:none}}
+</style></head><body><div id="hub-boot" role="status" aria-label="Загрузка TinellGame"><div class="boot-content"><img class="boot-logo" src="/ForaHub/tinellgame-logo-v2.png" alt="TinellGame" width="220" height="103" fetchpriority="high"><div class="boot-track" aria-hidden="true"><div class="boot-fill"></div></div><div class="boot-error">Не удалось загрузить хаб.<button type="button" onclick="location.reload()">Попробовать снова</button></div></div></div><div id="root" inert aria-hidden="true"></div>
+<script>
+(()=>{
+ const boot=document.getElementById('hub-boot'),root=document.getElementById('root'),started=performance.now();
+ const failure=setTimeout(()=>boot.classList.add('failed'),20000);
+ window.addEventListener('tinell:ready',async()=>{
+  clearTimeout(failure);
+  const logo=boot.querySelector('img');
+  await Promise.race([Promise.allSettled([logo.decode(),document.fonts.ready]),new Promise(r=>setTimeout(r,2500))]);
+  setTimeout(()=>{
+   const fill=boot.querySelector('.boot-fill');
+   const width=getComputedStyle(fill).width;
+   fill.style.animation='none';fill.style.width=width;
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.width='100%';boot.classList.add('ready')}));
+   setTimeout(()=>{root.removeAttribute('inert');root.removeAttribute('aria-hidden');boot.classList.add('leaving');setTimeout(()=>boot.remove(),500)},420);
+  },Math.max(0,1100-(performance.now()-started)));
+ },{once:true});
+})();
+</script><script type="module" src="/main.tsx"></script></body></html>
