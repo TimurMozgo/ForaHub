@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   title: "TinellGame — много миров, один хаб",
   description: "Твоя игровая вселенная. Находи любимые игры, открывай новые миры и создавай свой стиль.",
   icons: {
-    icon: "/tinellgame-mark.png",
-    shortcut: "/tinellgame-mark.png",
+    icon: "/tinellgame-logo-v2.png",
+    shortcut: "/tinellgame-logo-v2.png",
   },
 };
 
