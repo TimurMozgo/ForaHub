@@ -369,4 +369,4 @@ body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-pane
 .game-art.tiny,.detail-art.tiny{background-image:url("/tiny-swords-cover.png");background-size:cover;background-position:center 42%;}
 
 /* Approved stacked TG / TinellGame transparent logo. */
-.tinellgame-logo{display:block;object-fit:contain;width:140px;height:66px;flex-shrink:0}.brand{justify-content:center}.mobile-brand .tinellgame-logo{width:120px;height:57px}
+.tinellgame-logo{display:block;object-fit:contain;width:106px;height:50px;flex-shrink:0}.brand{justify-content:center}.mobile-brand .tinellgame-logo{width:86px;height:41px}
