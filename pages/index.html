@@ -17,7 +17,7 @@ html,body{margin:0;background:#101114}
 #hub-boot.failed .boot-error{display:block}
 @keyframes boot-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media(prefers-reduced-motion:reduce){#hub-boot,.boot-fill{transition:none}.boot-fill{animation:none;transform:scaleX(1)}.boot-content{transform:none}.boot-logo,.boot-emblem::before{animation:none;transform:none}.boot-logo{opacity:1}.boot-emblem::before{opacity:.65}}
-</style></head><body><div id="hub-boot" role="status" aria-label="Загрузка TinellGame"><div class="boot-content"><div class="boot-emblem"><img class="boot-logo" src="/ForaHub/tinellgame-logo-v2.png" alt="TinellGame" width="220" height="103" fetchpriority="high"></div><div class="boot-track" aria-hidden="true"><div class="boot-fill"></div></div><div class="boot-error">Не удалось загрузить хаб.<button type="button" onclick="location.reload()">Попробовать снова</button></div></div></div><div id="root" inert aria-hidden="true"></div>
+</style></head><body><div id="hub-boot" role="status" aria-label="Загрузка TinellGame"><div class="boot-content"><div class="boot-emblem"><img class="boot-logo" src="/ForaHub/tinellgame-logo-v2.png" alt="TinellGame" width="220" height="103" fetchpriority="high"></div><div class="boot-track" aria-hidden="true"><div class="boot-fill"></div></div><div class="boot-error">Не удалось загрузить хаб.<button type="button" onclick="location.reload()">Попробовать снова</button></div></div></div><div id="root" class="boot-pending" inert aria-hidden="true"></div>
 <script>
 (()=>{
  const boot=document.getElementById('hub-boot'),root=document.getElementById('root');
@@ -36,7 +36,7 @@ html,body{margin:0;background:#101114}
   boot.classList.add('ready');
   root.removeAttribute('inert');root.removeAttribute('aria-hidden');
   boot.classList.add('leaving');
-  setTimeout(()=>boot.remove(),500);
+  setTimeout(()=>{boot.remove();root.classList.remove("boot-pending")},500);
  },{once:true});
 })();
 </script><script type="module" src="/main.tsx"></script></body></html>
