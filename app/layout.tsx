@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ForaHub — много миров, один хаб",
+  title: "TinellGame — много миров, один хаб",
   description: "Твоя игровая вселенная. Находи любимые игры, открывай новые миры и создавай свой стиль.",
   icons: {
     icon: "/favicon.svg",

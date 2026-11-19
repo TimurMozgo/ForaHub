@@ -31,7 +31,7 @@ export async function supportInvoice(request:Request,env:SupportEnv){
   const raw=await request.text();if(raw.length>16384)return json({error:'invalid_request'},400);
   const body=JSON.parse(raw);if(!validAmount(body.amount)||typeof body.initData!=='string')return json({error:'invalid_request'},400);
   const user=telegramUser(body.initData,env.FORAHUB_BOT_TOKEN);if(!user)return json({error:'invalid_auth'},401);
-  const url=await telegramCall(env.FORAHUB_BOT_TOKEN,'createInvoiceLink',{title:'Поддержка ForaHub',description:'Добровольная поддержка разработки. Без игровых наград и зачисления на баланс.',payload:makePayload(user,body.amount,env.FORAHUB_BOT_TOKEN),currency:'XTR',prices:[{label:'Поддержать ForaHub',amount:body.amount}]});
+  const url=await telegramCall(env.FORAHUB_BOT_TOKEN,'createInvoiceLink',{title:'Поддержка TinellGame',description:'Добровольная поддержка разработки. Без игровых наград и зачисления на баланс.',payload:makePayload(user,body.amount,env.FORAHUB_BOT_TOKEN),currency:'XTR',prices:[{label:'Поддержать TinellGame',amount:body.amount}]});
   return json({url});
  }catch{return json({error:'unavailable'},503);}
 }
@@ -42,7 +42,7 @@ export async function supportWebhook(request:Request,env:SupportEnv){
   const update=await request.json() as {pre_checkout_query?:{id:string;from:{id:number};currency:string;total_amount:number;invoice_payload:string}};
   const q=update.pre_checkout_query;
   if(q){const ok=env.FORAHUB_SUPPORT_ENABLED==='true'&&q.currency==='XTR'&&validPayload(q.invoice_payload,q.from.id,q.total_amount,env.FORAHUB_BOT_TOKEN);
-   await telegramCall(env.FORAHUB_BOT_TOKEN,'answerPreCheckoutQuery',{pre_checkout_query_id:q.id,ok,...(!ok?{error_message:'Счёт недействителен. Открой новый счёт в ForaHub.'}:{})});}
+   await telegramCall(env.FORAHUB_BOT_TOKEN,'answerPreCheckoutQuery',{pre_checkout_query_id:q.id,ok,...(!ok?{error_message:'Счёт недействителен. Открой новый счёт в TinellGame.'}:{})});}
   // Support grants no game currency, items or access. Telegram keeps payment records.
   return json({ok:true});
  }catch{return json({error:'retry'},503);}

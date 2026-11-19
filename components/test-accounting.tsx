@@ -22,7 +22,7 @@ export default function TestAccounting(){
  const input={padding:12,borderRadius:10,background:'#101216',color:'#fff',border:'1px solid #49443a',width:'100%'};
  const button={...input,background:'#d4b371',color:'#16130c',cursor:'pointer'};
  return <main style={{maxWidth:720,margin:'0 auto',padding:'32px 20px 80px',color:'#f3f0e9',display:'grid',gap:20}}>
-  <a href="/" style={{color:'#d4b371'}}>← ForaHub</a><h1 style={{fontSize:28}}>Проверка учёта</h1>
+  <a href="/" style={{color:'#d4b371'}}>← TinellGame</a><h1 style={{fontSize:28}}>Проверка учёта</h1>
   <p>Изолированный тест без оплаты и настоящих призов. Результат выбирается вручную для проверки записи. Игровой баланс хаба не меняется.</p>
   <section style={box}><span>Тестовый баланс</span><strong style={{fontSize:36}}>{snapshot?.balance??'—'}</strong><button style={button} disabled={busy} onClick={()=>refresh().catch(e=>setNotice(messages[e.message]||'Ошибка чтения'))}>Обновить из таблицы</button></section>
   <p role="status" aria-live="polite">{notice}</p>
