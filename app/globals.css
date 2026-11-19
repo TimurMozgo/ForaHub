@@ -357,7 +357,7 @@ body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-pane
 }
 
 /* The approved ForaHub emblem, with transparent edges on both header surfaces. */
-.brand-symbol{background:none;border:0;border-radius:0}.forahub-mark{display:block;object-fit:contain;flex-shrink:0}.brand-symbol .forahub-mark{width:42px;height:42px}.mobile-brand .forahub-mark{width:32px;height:32px}
+.brand-symbol{background:none;border:0;border-radius:0}.tinellgame-mark{display:block;object-fit:contain;flex-shrink:0}.brand-symbol .tinellgame-mark{width:42px;height:42px}.mobile-brand .tinellgame-mark{width:32px;height:32px}
 
 .profile-wishlist{margin:32px 0}.profile-wishlist .section-heading{margin-top:0}
 /* Launch availability and independent creator support. */
