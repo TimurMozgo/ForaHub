@@ -377,3 +377,5 @@ body>.hub-case-player{animation:fora-fade-in .3s ease both}.hub-case-player-pane
 @keyframes tinell-home-card-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tinell-home-card-fade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.home-games>.game-card.is-revealed{animation-name:tinell-home-card-fade!important;animation-duration:.65s!important;transform:none}}
+
+.game-art.pixel,.detail-art.pixel{background:#174f49 url('/pixel-rush-cover.png') center/cover no-repeat}

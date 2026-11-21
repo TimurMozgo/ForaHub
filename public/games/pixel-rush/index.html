@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171b2e">
+  <meta name="description" content="Pixel Rush — мобильный пиксельный платформер.">
+  <title>Pixel Rush — пиксельный платформер</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">◆</span><div><strong>PIXEL RUSH</strong><small>Пиксельный платформер</small></div></div>
+      <div class="top-actions"><button id="levelsBtn" class="levels-btn" aria-label="Вернуться к списку уровней">☷ УРОВНИ</button><button id="inventoryBtn" class="levels-btn" aria-label="Открыть инвентарь и кузню">▣ СУМКА / КУЗНЯ</button><button id="soundBtn" class="icon-btn" aria-label="Звук">♪</button><button id="pauseBtn" class="icon-btn" aria-label="Пауза">Ⅱ</button></div>
+    </header>
+    <section class="game-panel" aria-label="Игровое поле">
+      <div class="hud"><span class="hud-item hud-level"><img id="hudLevelIcon" alt=""><span id="levelLabel">СЕКТОР 01 · ЗЕЛЁНЫЙ</span></span><span class="hud-item"><img id="hudGemIcon" alt=""><span id="gemLabel">◆ 0</span></span><span class="hud-item hud-lives"><span id="lifeLabel">♥ 5/5</span></span><span class="hud-item"><img id="hudDeathIcon" alt=""><span id="deathLabel">СМЕРТИ 0</span></span></div>
+      <div class="canvas-wrap"><canvas id="game" width="512" height="288" aria-label="Платформер Pixel Rush"></canvas><div id="damageToast" class="damage-toast" role="status" hidden></div>
+        <div id="overlay" class="overlay"><div class="overlay-card"><div class="eyebrow" id="overlayEyebrow">ИСПЫТАТЕЛЬНЫЙ КОМПЛЕКС</div><h1 id="overlayTitle">Pixel Rush</h1><p id="overlayText">Пробеги комнаты, собери кристаллы и доберись до выхода.</p><div id="overlayExtra" class="overlay-extra"></div><button id="primaryBtn" class="primary">НАЧАТЬ МАРШРУТ <span>→</span></button><button id="secondaryBtn" class="secondary">ВЫБРАТЬ УРОВЕНЬ</button></div></div>
+      </div>
+      <div class="mobile-controls"><div class="move-controls"><button data-control="left" aria-label="Влево">◀</button><button data-control="right" aria-label="Вправо">▶</button></div><button class="jump-control" data-control="jump" aria-label="Прыжок">ПРЫЖОК ↑</button></div>
+    </section>
+    <footer class="bottombar"><div id="skinLabel">ОБЛИК: ИСКАТЕЛЬ</div></footer>
+  </main>
+  <audio id="musicTrack" src="assets/music/overworld.mp3" loop preload="none"></audio>
+  <script src="game.js"></script>
+</body>
+</html>

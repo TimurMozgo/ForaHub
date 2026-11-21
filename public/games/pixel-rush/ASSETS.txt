@@ -1,0 +1,3 @@
+Pixel art: Craftpix, Free Simple Platformer Game Kit Pixel Art (archive ID 396765).
+Original license reference: https://craftpix.net/file-licenses/
+The game code and level layouts were created for this prototype.

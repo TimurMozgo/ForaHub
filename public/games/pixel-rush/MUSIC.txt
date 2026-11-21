@@ -1,0 +1,5 @@
+Overworld Theme (platformer.ogg) by Louswan
+Source: https://opengameart.org/content/overworld-theme-0
+License: CC0 1.0
+Converted to a mono MP3 at 64 kb/s for compatibility with mobile webviews.
+Playback starts after a player action. The sound button controls music and effects.
